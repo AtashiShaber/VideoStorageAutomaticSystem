@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/vide_storage
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+mybatis:
+  mapper-locations: classpath:mybatis/mapper/*.xml
+  type-aliases-package: com.atashi.vide.storage.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    org.mybatis: DEBUG
+    com.atashi.vide.storage: DEBUG
