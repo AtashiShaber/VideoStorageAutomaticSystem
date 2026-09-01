@@ -1,0 +1,2 @@
+# VideStorageAutomaticSystem
+针对指定文件夹路径下的Video进行tag管理
