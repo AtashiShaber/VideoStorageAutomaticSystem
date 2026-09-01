@@ -11,21 +11,25 @@
         <result property="vRank" column="v_rank"/>
         <result property="vAuthor" column="v_author"/>
         <result property="vTag" column="v_tag"/>
+        <result property="vSeries" column="v_series"/>
+        <result property="vSeason" column="v_season"/>
+        <result property="vNumber" column="v_number"/>
+        <result property="vFile" column="v_file"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.atashi.vide.storage.entity.Video" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO video (v_name, v_type, v_rank, v_author, v_tag)
-        VALUES (#{vName}, #{vType}, #{vRank}, #{vAuthor}, #{vTag})
+        INSERT INTO video (v_name, v_type, v_rank, v_author, v_tag, v_series, v_season, v_number, v_file)
+        VALUES (#{vName}, #{vType}, #{vRank}, #{vAuthor}, #{vTag}, #{vSeries}, #{vSeason}, #{vNumber}, #{vFile})
     </insert>
 
     <select id="selectById" parameterType="long" resultMap="VideoMap">
-        SELECT id, v_name, v_type, v_rank, v_author, v_tag
+        SELECT id, v_name, v_type, v_rank, v_author, v_tag, v_series, v_season, v_number, v_file
         FROM video
         WHERE id = #{id}
     </select>
 
     <select id="selectAll" resultMap="VideoMap">
-        SELECT id, v_name, v_type, v_rank, v_author, v_tag
+        SELECT id, v_name, v_type, v_rank, v_author, v_tag, v_series, v_season, v_number, v_file
         FROM video
         ORDER BY id DESC
     </select>
@@ -36,7 +40,11 @@
             v_type = #{vType},
             v_rank = #{vRank},
             v_author = #{vAuthor},
-            v_tag = #{vTag}
+            v_tag = #{vTag},
+            v_series = #{vSeries},
+            v_season = #{vSeason},
+            v_number = #{vNumber},
+            v_file = #{vFile}
         WHERE id = #{id}
     </update>
 
@@ -46,7 +54,7 @@
     </delete>
 
     <select id="searchByCondition" resultMap="VideoMap">
-        SELECT id, v_name, v_type, v_rank, v_author, v_tag
+        SELECT id, v_name, v_type, v_rank, v_author, v_tag, v_series, v_season, v_number, v_file
         FROM video
         <where>
             <if test="name != null and name != ''">
@@ -68,6 +76,18 @@
                     OR v_tag LIKE CONCAT('% ', #{tag}, '%')
                     OR v_tag LIKE CONCAT('% ', #{tag}, ' %')
                 )
+            </if>
+            <if test="series != null and series != ''">
+                AND v_series LIKE CONCAT('%', #{series}, '%')
+            </if>
+            <if test="season != null and season != ''">
+                AND v_season LIKE CONCAT('%', #{season}, '%')
+            </if>
+            <if test="number != null and number != ''">
+                AND v_number LIKE CONCAT('%', #{number}, '%')
+            </if>
+            <if test="file != null and file != ''">
+                AND v_file LIKE CONCAT('%', #{file}, '%')
             </if>
         </where>
         ORDER BY id DESC

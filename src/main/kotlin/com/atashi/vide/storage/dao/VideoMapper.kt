@@ -21,6 +21,10 @@ interface VideoMapper {
         @Param("type") type: String?,
         @Param("rank") rank: String?,
         @Param("author") author: String?,
-        @Param("tag") tag: String?
+        @Param("tag") tag: String?,
+        @Param("series") series: String?,
+        @Param("season") season: String?,
+        @Param("number") number: String?,
+        @Param("file") file: String?
     ): List<Video>
 }

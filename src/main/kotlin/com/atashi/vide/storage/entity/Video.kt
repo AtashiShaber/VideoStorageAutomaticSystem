@@ -6,5 +6,9 @@ data class Video(
     var vType: String = "",
     var vRank: String = "",
     var vAuthor: String? = null,
-    var vTag: String? = null
+    var vTag: String? = null,
+    var vSeries: String? = null,
+    var vSeason: String? = null,
+    var vNumber: String? = null,
+    var vFile: String? = null
 )
