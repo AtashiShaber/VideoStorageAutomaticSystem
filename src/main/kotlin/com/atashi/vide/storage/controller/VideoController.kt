@@ -30,6 +30,7 @@ class VideoController(
             currentDirectory = request.currentDirectory,
             vType = request.vType,
             selectedFiles = request.selectedFiles,
+            vName = request.vName,
             vAuthor = request.vAuthor,
             vSeries = request.vSeries,
             vSeason = request.vSeason,

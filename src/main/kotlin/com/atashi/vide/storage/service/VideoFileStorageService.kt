@@ -48,11 +48,15 @@ class VideoFileStorageService {
         currentDirectory: String,
         vType: String,
         selectedFiles: List<String>,
+        vName: String? = null,
         vAuthor: String? = null,
         vSeries: String? = null,
         vSeason: String? = null,
         vNumber: String? = null
     ): List<String> {
+        val resolvedName = normalizeCustomName(vName)
+        validateNameOverride(resolvedName, vSeries, vSeason, vNumber)
+
         val targetDirectory = buildTypeDirectory(rootDirectory, vType, vAuthor, vSeries, vSeason)
         Files.createDirectories(targetDirectory)
 
@@ -63,7 +67,7 @@ class VideoFileStorageService {
             .filter { it.isNotBlank() }
             .forEach { fileName ->
                 val sourceFile = sourceDirectory.resolve(fileName).normalize()
-                val targetName = buildTargetFileName(fileName, vSeries, vSeason, vNumber)
+                val targetName = buildTargetFileName(fileName, resolvedName, vSeries, vSeason, vNumber)
                 val targetFile = targetDirectory.resolve(targetName).normalize()
 
                 if (Files.exists(sourceFile) && Files.isRegularFile(sourceFile)) {
@@ -79,12 +83,17 @@ class VideoFileStorageService {
 
     private fun buildTargetFileName(
         originalFileName: String,
+        vName: String?,
         vSeries: String?,
         vSeason: String?,
         vNumber: String?
     ): String {
         val extension = originalFileName.substringAfterLast('.', missingDelimiterValue = "")
         val suffix = if (extension.isBlank()) "" else ".${extension}"
+
+        if (!vName.isNullOrBlank()) {
+            return "${normalizeUserFileName(vName)}${suffix}"
+        }
 
         if (!vSeries.isNullOrBlank() && !vSeason.isNullOrBlank()) {
             val normalizedNumber = normalizeNumber(vNumber)
@@ -97,13 +106,37 @@ class VideoFileStorageService {
         return "${generateSnowflakeId()}${suffix}"
     }
 
+    private fun normalizeCustomName(value: String?): String? {
+        if (value.isNullOrBlank()) {
+            return null
+        }
+        return value.trim()
+    }
+
+    private fun validateNameOverride(vName: String?, vSeries: String?, vSeason: String?, vNumber: String?) {
+        val hasSeriesOverride = !vSeries.isNullOrBlank() || !vSeason.isNullOrBlank() || !vNumber.isNullOrBlank()
+        if (!vName.isNullOrBlank() && hasSeriesOverride) {
+            throw IllegalArgumentException("vName cannot be set when vSeries, vSeason or vNumber is provided")
+        }
+    }
+
+    private fun normalizeUserFileName(value: String): String {
+        val trimmed = value.trim()
+        val cleaned = trimmed
+            .replace(Regex("[\\\\/:*?\"<>|]+"), "_")
+            .replace(Regex("\\s+"), "_")
+            .replace(Regex("_+"), "_")
+            .trim('_')
+        return cleaned.ifEmpty { generateSnowflakeId() }
+    }
+
     private fun sanitizeFileToken(value: String?): String {
         if (value.isNullOrBlank()) {
             return ""
         }
 
         return value.trim()
-            .replace(Regex("[^a-zA-Z0-9]+"), "_")
+            .replace(Regex("[^a-zA-Z0-9._-]+"), "_")
             .replace(Regex("_+"), "_")
             .trim('_')
     }

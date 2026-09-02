@@ -17,6 +17,8 @@ class VideoService(
     fun classifyAndSave(request: VideoBatchRequest): VideoBatchResponse {
         val rootDirectory = request.rootDirectory.trim().ifEmpty { throw IllegalArgumentException("rootDirectory cannot be empty") }
         val safeType = request.vType.trim().ifEmpty { throw IllegalArgumentException("vType cannot be empty") }
+        val resolvedName = request.vName?.trim()
+        validateNameOverride(resolvedName, request.vSeries, request.vSeason, request.vNumber)
 
         val typeDirectory = videoFileStorageService.buildTypeDirectory(
             rootDirectory = rootDirectory,
@@ -30,6 +32,7 @@ class VideoService(
             currentDirectory = request.currentDirectory,
             vType = safeType,
             selectedFiles = request.selectedFiles,
+            vName = resolvedName,
             vAuthor = request.vAuthor,
             vSeries = request.vSeries,
             vSeason = request.vSeason,
@@ -44,7 +47,7 @@ class VideoService(
                     ?: fileName
 
                 val saved = Video(
-                    vName = targetFileName,
+                    vName = resolvedName ?: targetFileName,
                     vType = safeType,
                     vRank = request.vRank,
                     vAuthor = request.vAuthor,
@@ -66,6 +69,13 @@ class VideoService(
             savedVideos = savedNames,
             movedFiles = movedFiles
         )
+    }
+
+    private fun validateNameOverride(vName: String?, vSeries: String?, vSeason: String?, vNumber: String?) {
+        val hasSeriesAssignment = !vSeries.isNullOrBlank() || !vSeason.isNullOrBlank() || !vNumber.isNullOrBlank()
+        if (!vName.isNullOrBlank() && hasSeriesAssignment) {
+            throw IllegalArgumentException("vName cannot be set when vSeries, vSeason or vNumber is provided")
+        }
     }
 
     fun searchVideos(

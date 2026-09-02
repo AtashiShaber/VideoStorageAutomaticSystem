@@ -96,7 +96,16 @@ rootDirectory/
 - 若存在 vSeason，则继续放入 season 目录
 - 若 vSeries 与 vSeason 都存在，文件名优先使用 vNumber，例如：05.mp4
 - 若缺少 vSeries 或 vSeason，则使用 snowflake 随机名称
+- 若用户传入 vName 且未设置 vSeries / vSeason / vNumber，则以用户指定的名称作为文件名
+- 若用户同时设置了 vName 与 vSeries / vSeason / vNumber，则系统拒绝该配置并抛出异常
 - tag 不参与目录层级，仅作为查询字段
+
+### 用户覆盖规则
+- vName：若不为空，且没有 vSeries / vSeason / vNumber，则使用该值作为文件名
+- vType：若不为空，则按用户值生成目录和分类
+- vSeries / vSeason / vNumber：若不为空，则按设置值指定路径和命名
+- vTag：若不为空，则写入元数据，作为搜索字段
+- 如果某字段为空，则回退到默认逻辑
 
 ## 目录结构示例
 ```text

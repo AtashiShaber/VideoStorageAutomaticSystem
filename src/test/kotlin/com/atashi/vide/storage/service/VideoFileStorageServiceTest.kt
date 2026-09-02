@@ -3,6 +3,7 @@ package com.atashi.vide.storage.service
 import com.atashi.vide.storage.dao.VideoMapper
 import com.atashi.vide.storage.entity.Video
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -121,5 +122,49 @@ class VideoFileStorageServiceTest {
         assertEquals("studio", mapper.lastAuthor)
         assertEquals("adventure", mapper.lastTag)
         assertEquals("piece", mapper.lastSeries)
+    }
+
+    @Test
+    fun `should use explicit vName when provided and no series metadata is set`() {
+        val rootDir = Files.createTempDirectory("video-root")
+        val currentDir = Files.createDirectory(rootDir.resolve("current"))
+        val file = Files.createFile(currentDir.resolve("original-name.mp4"))
+
+        val service = VideoFileStorageService()
+        val movedFiles = service.classifyFiles(
+            rootDirectory = rootDir.toString(),
+            currentDirectory = currentDir.toString(),
+            vType = "Anime",
+            selectedFiles = listOf(file.name),
+            vName = "custom-title",
+            vAuthor = "Studio A"
+        )
+
+        val targetDir = rootDir.resolve("Anime").resolve("Studio_A")
+        assertTrue(movedFiles.contains("custom-title.mp4"))
+        assertTrue(Files.exists(targetDir.resolve("custom-title.mp4")))
+    }
+
+    @Test
+    fun `should reject custom vName when series season or number is present`() {
+        val rootDir = Files.createTempDirectory("video-root")
+        val currentDir = Files.createDirectory(rootDir.resolve("current"))
+        Files.createFile(currentDir.resolve("original-name.mp4"))
+
+        val service = VideoFileStorageService()
+
+        assertThrows(IllegalArgumentException::class.java) {
+            service.classifyFiles(
+                rootDirectory = rootDir.toString(),
+                currentDirectory = currentDir.toString(),
+                vType = "Anime",
+                selectedFiles = listOf("original-name.mp4"),
+                vName = "manual-name",
+                vAuthor = "Studio A",
+                vSeries = "One Piece",
+                vSeason = "S1",
+                vNumber = "03"
+            )
+        }
     }
 }
