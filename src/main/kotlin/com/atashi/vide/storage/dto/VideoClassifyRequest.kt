@@ -4,6 +4,8 @@ data class VideoClassifyRequest(
     val rootDirectory: String = "",
     val currentDirectory: String = "",
     val vType: String = "",
+    val vAuthor: String? = null,
+    val vTag: String? = null,
     val vSeries: String? = null,
     val vSeason: String? = null,
     val vNumber: String? = null,

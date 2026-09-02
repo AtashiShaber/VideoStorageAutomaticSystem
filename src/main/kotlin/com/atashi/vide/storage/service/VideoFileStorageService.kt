@@ -18,10 +18,29 @@ class VideoFileStorageService {
         private val SEQUENCE = AtomicLong(0L)
     }
 
-    fun buildTypeDirectory(rootDirectory: String, vType: String): Path {
+    fun buildTypeDirectory(
+        rootDirectory: String,
+        vType: String,
+        vAuthor: String? = null,
+        vSeries: String? = null,
+        vSeason: String? = null
+    ): Path {
         val safeRoot = rootDirectory.trim().ifEmpty { throw IllegalArgumentException("v_file root directory cannot be empty") }
         val safeType = vType.trim().ifEmpty { throw IllegalArgumentException("v_type cannot be empty") }
-        return Paths.get(safeRoot).toAbsolutePath().normalize().resolve(safeType).normalize()
+        var directory = Paths.get(safeRoot).toAbsolutePath().normalize().resolve(safeType).normalize()
+
+        if (!vAuthor.isNullOrBlank()) {
+            directory = directory.resolve(sanitizeFileToken(vAuthor)).normalize()
+        }
+
+        if (!vSeries.isNullOrBlank()) {
+            directory = directory.resolve(sanitizeFileToken(vSeries)).normalize()
+            if (!vSeason.isNullOrBlank()) {
+                directory = directory.resolve(sanitizeFileToken(vSeason)).normalize()
+            }
+        }
+
+        return directory
     }
 
     fun classifyFiles(
@@ -29,15 +48,12 @@ class VideoFileStorageService {
         currentDirectory: String,
         vType: String,
         selectedFiles: List<String>,
+        vAuthor: String? = null,
         vSeries: String? = null,
         vSeason: String? = null,
         vNumber: String? = null
     ): List<String> {
-        val targetDirectory = if (currentDirectory.isNotBlank()) {
-            buildTypeDirectory(currentDirectory, vType)
-        } else {
-            buildTypeDirectory(rootDirectory, vType)
-        }
+        val targetDirectory = buildTypeDirectory(rootDirectory, vType, vAuthor, vSeries, vSeason)
         Files.createDirectories(targetDirectory)
 
         val sourceDirectory = Paths.get(currentDirectory).toAbsolutePath().normalize()
@@ -70,15 +86,12 @@ class VideoFileStorageService {
         val extension = originalFileName.substringAfterLast('.', missingDelimiterValue = "")
         val suffix = if (extension.isBlank()) "" else ".${extension}"
 
-        val metadataName = listOfNotNull(
-            sanitizeFileToken(vSeries),
-            sanitizeFileToken(vSeason),
-            sanitizeFileToken(vNumber)
-        ).filter { it.isNotBlank() }
-            .joinToString("_")
-
-        if (metadataName.isNotBlank()) {
-            return "${metadataName}${suffix}"
+        if (!vSeries.isNullOrBlank() && !vSeason.isNullOrBlank()) {
+            val normalizedNumber = normalizeNumber(vNumber)
+            if (normalizedNumber.isNotBlank()) {
+                return "${normalizedNumber}${suffix}"
+            }
+            return "${generateSnowflakeId()}${suffix}"
         }
 
         return "${generateSnowflakeId()}${suffix}"
@@ -93,6 +106,20 @@ class VideoFileStorageService {
             .replace(Regex("[^a-zA-Z0-9]+"), "_")
             .replace(Regex("_+"), "_")
             .trim('_')
+    }
+
+    private fun normalizeNumber(value: String?): String {
+        if (value.isNullOrBlank()) {
+            return ""
+        }
+
+        val trimmed = value.trim()
+        val digitsOnly = trimmed.filter { it.isDigit() }
+        if (digitsOnly.isNotEmpty() && trimmed.all { it.isDigit() }) {
+            return digitsOnly
+        }
+
+        return sanitizeFileToken(trimmed)
     }
 
     private fun generateSnowflakeId(): String {

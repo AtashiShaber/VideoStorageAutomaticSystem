@@ -6,7 +6,6 @@ import com.atashi.vide.storage.dto.VideoBatchResponse
 import com.atashi.vide.storage.entity.Video
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.nio.file.Paths
 
 @Service
 class VideoService(
@@ -19,12 +18,19 @@ class VideoService(
         val rootDirectory = request.rootDirectory.trim().ifEmpty { throw IllegalArgumentException("rootDirectory cannot be empty") }
         val safeType = request.vType.trim().ifEmpty { throw IllegalArgumentException("vType cannot be empty") }
 
-        val typeDirectory = videoFileStorageService.buildTypeDirectory(rootDirectory, safeType)
+        val typeDirectory = videoFileStorageService.buildTypeDirectory(
+            rootDirectory = rootDirectory,
+            vType = safeType,
+            vAuthor = request.vAuthor,
+            vSeries = request.vSeries,
+            vSeason = request.vSeason
+        )
         val movedFiles = videoFileStorageService.classifyFiles(
             rootDirectory = rootDirectory,
             currentDirectory = request.currentDirectory,
             vType = safeType,
             selectedFiles = request.selectedFiles,
+            vAuthor = request.vAuthor,
             vSeries = request.vSeries,
             vSeason = request.vSeason,
             vNumber = request.vNumber
@@ -59,6 +65,32 @@ class VideoService(
             typeDirectory = typeDirectory.toString(),
             savedVideos = savedNames,
             movedFiles = movedFiles
+        )
+    }
+
+    fun searchVideos(
+        keyword: String? = null,
+        name: String? = null,
+        type: String? = null,
+        rank: String? = null,
+        author: String? = null,
+        tag: String? = null,
+        series: String? = null,
+        season: String? = null,
+        number: String? = null,
+        file: String? = null
+    ): List<Video> {
+        return videoMapper.searchByCondition(
+            keyword = keyword,
+            name = name,
+            type = type,
+            rank = rank,
+            author = author,
+            tag = tag,
+            series = series,
+            season = season,
+            number = number,
+            file = file
         )
     }
 }

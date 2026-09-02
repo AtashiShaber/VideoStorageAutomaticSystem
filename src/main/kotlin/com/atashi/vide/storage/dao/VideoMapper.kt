@@ -17,6 +17,7 @@ interface VideoMapper {
     fun deleteById(id: Long): Int
 
     fun searchByCondition(
+        @Param("keyword") keyword: String?,
         @Param("name") name: String?,
         @Param("type") type: String?,
         @Param("rank") rank: String?,

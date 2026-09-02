@@ -57,37 +57,48 @@
         SELECT id, v_name, v_type, v_rank, v_author, v_tag, v_series, v_season, v_number, v_file
         FROM video
         <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    LOWER(v_name) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+                    OR LOWER(v_type) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+                    OR LOWER(v_author) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+                    OR LOWER(v_series) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+                    OR LOWER(v_tag) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+                    OR LOWER(v_rank) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+                    OR LOWER(v_season) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+                )
+            </if>
             <if test="name != null and name != ''">
-                AND v_name LIKE CONCAT('%', #{name}, '%')
+                AND LOWER(v_name) LIKE LOWER(CONCAT('%', #{name}, '%'))
             </if>
             <if test="type != null and type != ''">
-                AND v_type = #{type}
+                AND LOWER(v_type) LIKE LOWER(CONCAT('%', #{type}, '%'))
             </if>
             <if test="rank != null and rank != ''">
-                AND v_rank = #{rank}
+                AND LOWER(v_rank) LIKE LOWER(CONCAT('%', #{rank}, '%'))
             </if>
             <if test="author != null and author != ''">
-                AND v_author LIKE CONCAT('%', #{author}, '%')
+                AND LOWER(v_author) LIKE LOWER(CONCAT('%', #{author}, '%'))
             </if>
             <if test="tag != null and tag != ''">
                 AND (
-                    v_tag LIKE CONCAT('%', #{tag}, '%')
-                    OR v_tag LIKE CONCAT('%', #{tag}, ' %')
-                    OR v_tag LIKE CONCAT('% ', #{tag}, '%')
-                    OR v_tag LIKE CONCAT('% ', #{tag}, ' %')
+                    LOWER(v_tag) LIKE LOWER(CONCAT('%', #{tag}, '%'))
+                    OR LOWER(v_tag) LIKE LOWER(CONCAT('%', #{tag}, ' %'))
+                    OR LOWER(v_tag) LIKE LOWER(CONCAT('% ', #{tag}, '%'))
+                    OR LOWER(v_tag) LIKE LOWER(CONCAT('% ', #{tag}, ' %'))
                 )
             </if>
             <if test="series != null and series != ''">
-                AND v_series LIKE CONCAT('%', #{series}, '%')
+                AND LOWER(v_series) LIKE LOWER(CONCAT('%', #{series}, '%'))
             </if>
             <if test="season != null and season != ''">
-                AND v_season LIKE CONCAT('%', #{season}, '%')
+                AND LOWER(v_season) LIKE LOWER(CONCAT('%', #{season}, '%'))
             </if>
             <if test="number != null and number != ''">
-                AND v_number LIKE CONCAT('%', #{number}, '%')
+                AND LOWER(v_number) LIKE LOWER(CONCAT('%', #{number}, '%'))
             </if>
             <if test="file != null and file != ''">
-                AND v_file LIKE CONCAT('%', #{file}, '%')
+                AND LOWER(v_file) LIKE LOWER(CONCAT('%', #{file}, '%'))
             </if>
         </where>
         ORDER BY id DESC
