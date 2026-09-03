@@ -6,6 +6,9 @@ import com.atashi.vide.storage.dto.VideoBatchResponse
 import com.atashi.vide.storage.entity.Video
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.awt.Desktop
 
 @Service
 class VideoService(
@@ -55,7 +58,7 @@ class VideoService(
                     vSeries = request.vSeries,
                     vSeason = request.vSeason,
                     vNumber = request.vNumber,
-                    vFile = typeDirectory.toString()
+                    vFile = if (targetFileName.isBlank()) typeDirectory.toString() else typeDirectory.resolve(targetFileName).toString()
                 )
 
                 videoMapper.insert(saved)
@@ -102,5 +105,35 @@ class VideoService(
             number = number,
             file = file
         )
+    }
+
+    fun findAll(): List<Video> = videoMapper.selectAll()
+
+    fun findById(id: Long): Video? = videoMapper.selectById(id)
+
+    @Transactional
+    fun update(id: Long, video: Video): Video? {
+        val existing = videoMapper.selectById(id) ?: return null
+        val updated = video.copy(id = id, vFile = existing.vFile)
+        videoMapper.update(updated)
+        return updated
+    }
+
+    @Transactional
+    fun delete(id: Long, deleteLocalFile: Boolean = true): Boolean {
+        val video = videoMapper.selectById(id) ?: return false
+        if (deleteLocalFile && !video.vFile.isNullOrBlank()) {
+            val file = Paths.get(video.vFile!!).toAbsolutePath().normalize()
+            if (Files.exists(file) && Files.isRegularFile(file)) Files.delete(file)
+        }
+        return videoMapper.deleteById(id) > 0
+    }
+
+    fun openWithDefaultPlayer(id: Long): Boolean {
+        val path = videoMapper.selectById(id)?.vFile ?: return false
+        val file = Paths.get(path).toFile()
+        if (!file.isFile || !Desktop.isDesktopSupported()) return false
+        Desktop.getDesktop().open(file)
+        return true
     }
 }
