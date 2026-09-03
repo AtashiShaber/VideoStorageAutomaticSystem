@@ -36,78 +36,78 @@
   </style>
 </head>
 <body>
-<main class="shell" id="archivePage">
-  <header>
-    <div><div class="eyebrow">Local video library</div><h1>视频归档台</h1><p class="subtitle">选择文件，填写一次分类信息，批量归档到本地存储。</p></div>
-    <div class="status"><span class="dot" id="apiDot"></span><span id="apiStatus">等待连接后端</span><button class="ghost" id="settingsBtn" type="button">存储设置</button><button class="page-switch" id="manageBtn" type="button">进入视频管理</button></div>
-  </header>
-  <div class="layout">
-    <section class="panel file-picker-panel">
-      <h2>1. 选择视频</h2>
-      <div class="drop" id="dropZone"><div><strong>点击选择，或拖入视频文件</strong><span>会打开 Windows 资源管理器，可多选文件或选择文件夹</span></div><input id="filePicker" type="file" accept="video/*,.mkv,.mp4,.avi,.mov,.webm" multiple hidden><input id="folderPicker" type="file" webkitdirectory directory multiple hidden></div>
-      <div class="file-list" id="fileList"><p class="hint">还没有选择文件。</p></div>
-      <div class="actions"><button class="secondary" id="folderBtn" type="button">从资源管理器选择文件夹</button><span class="hint">浏览器不会暴露绝对路径，来源目录仍需在右侧配置。</span></div>
-    </section>
-    <aside class="panel storage-panel">
-      <h2>存储位置</h2>
-      <div class="field"><label for="rootDirectory">Video 存储根目录</label><input id="rootDirectory" type="text" placeholder="例如 D:\Videos"><button class="secondary" type="button" onclick="chooseDirectory('rootDirectory')">从资源管理器选择</button><p class="hint">路径保存在浏览器 localStorage。</p></div>
-      <div class="field" style="margin-top:15px"><label for="currentDirectory">当前来源目录</label><input id="currentDirectory" type="text" placeholder="例如 D:\Inbox"><button class="secondary" type="button" onclick="chooseDirectory('currentDirectory')">从资源管理器选择</button><p class="hint">后端按此路径查找并移动选中的文件。</p></div>
-      <div class="path-preview"><strong>归档路径预览</strong><code id="pathPreview">请先填写类型</code></div>
-      <div class="actions"><button class="secondary" id="savePaths" type="button">保存路径</button></div>
-    </aside>
-    <section class="panel full">
-      <h2>2. 统一分类信息</h2>
-      <div class="notice">公共字段会应用到所有选中文件。文件名和编号必须逐文件设置；当使用系列/季/编号时，不能同时设置名称。</div>
-      <div class="grid">
-        <div class="field"><label for="vType">类型 <b>*</b></label><input id="vType" type="text" placeholder="Anime / Movie"></div>
-        <div class="field"><label for="vRank">评级</label><input id="vRank" type="text" placeholder="例如 18+"></div>
-        <div class="field"><label for="vAuthor">作者 / 制作团队</label><input id="vAuthor" type="text" placeholder="Studio A"></div>
-        <div class="field wide"><label for="vTag">统一标签</label><input id="vTag" type="text" placeholder="例如 action classic"><p class="hint">应用到所有文件；逐文件填写可覆盖。</p></div>
-        <div class="field wide"><label for="vSeries">系列</label><input id="vSeries" type="text" placeholder="One Piece"></div>
-        <div class="field wide"><label for="vSeason">季</label><input id="vSeason" type="text" placeholder="S1"></div>
+  <main class="shell" id="archivePage">
+    <header>
+      <div><div class="eyebrow">Local video library</div><h1>视频归档台</h1><p class="subtitle">选择文件，填写一次分类信息，批量归档到本地存储。</p></div>
+      <div class="status"><span class="dot" id="apiDot"></span><span id="apiStatus">等待连接后端</span><button class="ghost" id="settingsBtn" type="button">存储设置</button><button class="page-switch" id="manageBtn" type="button">进入视频管理</button></div>
+    </header>
+    <div class="layout">
+      <section class="panel file-picker-panel">
+        <h2>1. 选择视频</h2>
+        <div class="drop" id="dropZone"><div><strong>点击选择，或拖入视频文件</strong><span>会打开 Windows 资源管理器，可多选文件或选择文件夹</span></div><input id="filePicker" type="file" accept="video/*,.mkv,.mp4,.avi,.mov,.webm" multiple hidden><input id="folderPicker" type="file" webkitdirectory directory multiple hidden></div>
+        <div class="file-list" id="fileList"><p class="hint">还没有选择文件。</p></div>
+        <div class="actions"><button class="secondary" id="folderBtn" type="button">从资源管理器选择文件夹</button><span class="hint">浏览器不会暴露绝对路径，来源目录仍需在右侧配置。</span></div>
+      </section>
+      <aside class="panel storage-panel">
+        <h2>存储位置</h2>
+        <div class="field"><label for="rootDirectory">Video 存储根目录</label><input id="rootDirectory" type="text" placeholder="例如 D:\Videos"><button class="secondary" type="button" onclick="chooseDirectory('rootDirectory')">从资源管理器选择</button><p class="hint">路径保存在浏览器 localStorage。</p></div>
+        <div class="field" style="margin-top:15px"><label for="currentDirectory">当前来源目录</label><input id="currentDirectory" type="text" placeholder="例如 D:\Inbox"><button class="secondary" type="button" onclick="chooseDirectory('currentDirectory')">从资源管理器选择</button><p class="hint">后端按此路径查找并移动选中的文件。</p></div>
+        <div class="path-preview"><strong>归档路径预览</strong><code id="pathPreview">请先填写类型</code></div>
+        <div class="actions"><button class="secondary" id="savePaths" type="button">保存路径</button></div>
+      </aside>
+      <section class="panel full">
+        <h2>2. 统一分类信息</h2>
+        <div class="notice">公共字段会应用到所有选中文件。文件名和编号必须逐文件设置；当使用系列/季/编号时，不能同时设置名称。</div>
+        <div class="grid">
+          <div class="field"><label for="vType">类型 <b>*</b></label><input id="vType" type="text" placeholder="Anime / Movie"></div>
+          <div class="field"><label for="vRank">评级</label><input id="vRank" type="text" placeholder="例如 18+"></div>
+          <div class="field"><label for="vAuthor">作者 / 制作团队</label><input id="vAuthor" type="text" placeholder="Studio A"></div>
+          <div class="field wide"><label for="vTag">统一标签</label><input id="vTag" type="text" placeholder="例如 action classic"><p class="hint">应用到所有文件；逐文件填写可覆盖。</p></div>
+          <div class="field wide"><label for="vSeries">系列</label><input id="vSeries" type="text" placeholder="One Piece"></div>
+          <div class="field wide"><label for="vSeason">季</label><input id="vSeason" type="text" placeholder="S1"></div>
+        </div>
+        <div class="actions"><button class="primary" id="submitBtn" type="button">批量归档并保存元数据</button><button class="secondary" id="classifyBtn" type="button">仅移动文件</button><span class="hint" id="submitState"></span></div><p id="message"></p>
+      </section>
+      <section class="panel full"><h2>逐文件设置</h2><p class="hint" style="margin-bottom:12px">这里的名称、编号和标签不会被统一覆盖。名称与编号二选一；若填写系列/季，建议为每个文件填写编号。</p><div class="table-wrap"><table><thead><tr><th>原文件</th><th>名称（与编号互斥）</th><th>编号（与名称互斥）</th><th>标签</th></tr></thead><tbody id="fileSettings"><tr><td colspan="4" class="hint">选择文件后可编辑。</td></tr></tbody></table></div></section>
+    </div>
+  </main>
+  <main class="shell" id="managePage" hidden>
+    <header>
+      <div><div class="eyebrow">Library control</div><h1>视频管理</h1><p class="subtitle">查看、编辑、播放和删除已归档视频。</p></div>
+      <div class="status">
+        <button class="ghost" id="manageSettingsBtn" type="button">存储设置</button>
+        <button class="page-switch" id="archiveBtn" type="button">返回归档</button>
       </div>
-      <div class="actions"><button class="primary" id="submitBtn" type="button">批量归档并保存元数据</button><button class="secondary" id="classifyBtn" type="button">仅移动文件</button><span class="hint" id="submitState"></span></div><p id="message"></p>
-    </section>
-    <section class="panel full"><h2>逐文件设置</h2><p class="hint" style="margin-bottom:12px">这里的名称、编号和标签不会被统一覆盖。名称与编号二选一；若填写系列/季，建议为每个文件填写编号。</p><div class="table-wrap"><table><thead><tr><th>原文件</th><th>名称（与编号互斥）</th><th>编号（与名称互斥）</th><th>标签</th></tr></thead><tbody id="fileSettings"><tr><td colspan="4" class="hint">选择文件后可编辑。</td></tr></tbody></table></div></section>
-  </div>
-</main>
-<main class="shell" id="managePage" hidden>
-  <header>
-    <div><div class="eyebrow">Library control</div><h1>视频管理</h1><p class="subtitle">查看、编辑、播放和删除已归档视频。</p></div>
-    <div class="status">
-      <button class="ghost" id="manageSettingsBtn" type="button">存储设置</button>
-      <button class="page-switch" id="archiveBtn" type="button">返回归档</button>
-    </div>
-  </header>
-  <section class="panel">
-    <div class="searchbar">
-      <div class="filter-radios">
-        <label><input type="radio" name="manageRating" value="safe" checked> 全年龄模式</label>
-        <label><input type="radio" name="manageRating" value="all"> 全部内容</label>
+    </header>
+    <section class="panel">
+      <div class="searchbar">
+        <div class="filter-radios">
+          <label><input type="radio" name="manageRating" value="safe" checked> 全年龄模式</label>
+          <label><input type="radio" name="manageRating" value="all"> 全部内容</label>
+        </div>
+        <input id="manageSearch" type="search" placeholder="搜索名称、类型、作者、系列、标签">
+        <button class="primary" id="manageRefresh" type="button">刷新列表</button>
       </div>
-      <input id="manageSearch" type="search" placeholder="搜索名称、类型、作者、系列、标签">
-      <button class="primary" id="manageRefresh" type="button">刷新列表</button>
+      <p class="hint" id="manageStatus"></p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>名称 / 编号</th><th>分类</th><th>作者 / 系列</th><th>标签</th><th>评级</th><th>文件路径</th><th>操作</th></tr></thead>
+          <tbody id="manageRows"><tr><td colspan="7" class="hint">点击刷新列表加载视频。</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <div class="modal-backdrop" id="settingsModal" hidden onclick="if(event.target===this) closeSettings()">
+    <div class="modal">
+      <div class="modal-head"><h2>首次设置路径</h2><button class="close" type="button" aria-label="关闭" onclick="closeSettings()">×</button></div>
+      <p class="subtitle">即使后端尚未启动，也可以先选择文件、填写信息和保存草稿。</p>
+      <div class="field"><label for="modalApi">后端 API 地址</label><input id="modalApi" type="url" placeholder="例如 http://localhost:8080"><p class="hint">不要填写 index.html 所在的端口；后端上线后再执行归档。</p></div>
+      <div class="field" style="margin-top:14px"><label for="modalRoot">Video 存储根目录</label><input id="modalRoot" type="text" placeholder="例如 D:\Videos"><button class="secondary" type="button" onclick="chooseDirectory('modalRoot')">从资源管理器选择</button></div>
+      <div class="field" style="margin-top:14px"><label for="modalCurrent">当前来源目录</label><input id="modalCurrent" type="text" placeholder="例如 D:\Inbox"><button class="secondary" type="button" onclick="chooseDirectory('modalCurrent')">从资源管理器选择</button></div>
+      <div class="actions"><button class="primary" id="modalSave" type="button">保存并开始</button><button class="secondary" id="modalCancel" type="button">暂时关闭</button></div>
+      <p class="error" id="modalError"></p>
     </div>
-    <p class="hint" id="manageStatus"></p>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>名称 / 编号</th><th>分类</th><th>作者 / 系列</th><th>标签</th><th>评级</th><th>文件路径</th><th>操作</th></tr></thead>
-        <tbody id="manageRows"><tr><td colspan="7" class="hint">点击刷新列表加载视频。</td></tr></tbody>
-      </table>
-    </div>
-  </section>
-</main>
-<div class="modal-backdrop" id="settingsModal" hidden onclick="if(event.target===this) closeSettings()">
-  <div class="modal">
-    <div class="modal-head"><h2>首次设置路径</h2><button class="close" type="button" aria-label="关闭" onclick="closeSettings()">×</button></div>
-    <p class="subtitle">即使后端尚未启动，也可以先选择文件、填写信息和保存草稿。</p>
-    <div class="field"><label for="modalApi">后端 API 地址</label><input id="modalApi" type="url" placeholder="例如 http://localhost:8080"><p class="hint">不要填写 index.html 所在的端口；后端上线后再执行归档。</p></div>
-    <div class="field" style="margin-top:14px"><label for="modalRoot">Video 存储根目录</label><input id="modalRoot" type="text" placeholder="例如 D:\Videos"><button class="secondary" type="button" onclick="chooseDirectory('modalRoot')">从资源管理器选择</button></div>
-    <div class="field" style="margin-top:14px"><label for="modalCurrent">当前来源目录</label><input id="modalCurrent" type="text" placeholder="例如 D:\Inbox"><button class="secondary" type="button" onclick="chooseDirectory('modalCurrent')">从资源管理器选择</button></div>
-    <div class="actions"><button class="primary" id="modalSave" type="button">保存并开始</button><button class="secondary" id="modalCancel" type="button">暂时关闭</button></div>
-    <p class="error" id="modalError"></p>
   </div>
-</div>
 <script>
   const $ = (id) => document.getElementById(id);
   const state = { files: [] };
@@ -128,10 +128,10 @@
     localStorage.setItem('videoCurrentDirectory', $('currentDirectory').value);
   }
   function saveApiBase(value) { localStorage.setItem('videoApiBase', value.trim().replace(/\/$/, '')); }
-  function closeSettings() {
-    $('settingsModal').hidden = true;
-    $('modalError').textContent = '';
-    localStorage.setItem('videoSetupDismissed', 'true');
+  function closeSettings() { 
+    $('settingsModal').hidden = true; 
+    $('modalError').textContent = ''; 
+    localStorage.setItem('videoSetupDismissed', 'true'); 
   }
 
   // 确保模态框所有关闭方式都有效
@@ -186,44 +186,49 @@
   async function checkBackend() { try { const response = await fetch(apiUrl('/videos'), { signal:AbortSignal.timeout(2500) }); backendOnline = response.ok; $('apiDot').classList.toggle('ready', backendOnline); $('apiStatus').textContent = backendOnline ? '后端已连接' : '后端未上线，可离线配置'; } catch (_) { backendOnline = false; $('apiStatus').textContent = '后端未上线，可离线配置'; } }
   let managedVideos = [];
   function showPage(page) { $('archivePage').hidden = page !== 'archive'; $('managePage').hidden = page !== 'manage'; if (page === 'manage') loadManagedVideos(); }
-  async function loadManagedVideos() {
-    $('manageStatus').textContent = '正在加载…';
-    try {
-      const keyword = $('manageSearch').value.trim();
-      const path = keyword ? `/videos/search?keyword=${encodeURIComponent(keyword)}` : '/videos';
-      const response = await fetch(apiUrl(path));
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      managedVideos = await response.json();
-      renderManagedVideos();
-      $('manageStatus').textContent = `已加载 ${managedVideos.length} 条记录`;
-    } catch (error) {
-      $('manageStatus').textContent = `加载失败：${error.message}`;
-      $('manageRows').innerHTML = '<tr><td colspan="7" class="hint">无法连接后端。</td></tr>';
-    }
+  async function loadManagedVideos() { 
+    $('manageStatus').textContent = '正在加载…'; 
+    try { 
+      const keyword = $('manageSearch').value.trim(); 
+      const path = keyword ? `/videos/search?keyword=${encodeURIComponent(keyword)}` : '/videos'; 
+      const response = await fetch(apiUrl(path)); 
+      if (!response.ok) throw new Error(`HTTP ${response.status}`); 
+      managedVideos = await response.json(); 
+      renderManagedVideos(); 
+      $('manageStatus').textContent = `已加载 ${managedVideos.length} 条记录`; 
+    } catch (error) { 
+      $('manageStatus').textContent = `加载失败：${error.message}`; 
+      $('manageRows').innerHTML = '<tr><td colspan="7" class="hint">无法连接后端。</td></tr>'; 
+    } 
   }
   function getSelectedRating() { return document.querySelector('input[name="manageRating"]:checked')?.value || 'safe'; }
-  function renderManagedVideos() {
-    const showAll = getSelectedRating() === 'all';
-    const list = managedVideos.filter(video => showAll || String(video.vRank || '').trim() !== '18+');
+  function renderManagedVideos() { 
+    const showAll = getSelectedRating() === 'all'; 
+    const list = managedVideos.filter(video => {
+      // 跳过没有有效数据的记录（如只有路径的空记录）
+      if (!video.vName || video.vName.trim() === '') return false;
+      // 根据评级过滤
+      return showAll || String(video.vRank || '').trim() !== '18+';
+    }); 
     if (list.length === 0) {
       $('manageRows').innerHTML = '<tr><td colspan="7" class="hint">没有匹配的视频。</td></tr>';
       return;
     }
-    $('manageRows').innerHTML = list.map(video => `<tr data-id="${video.id}"><td><strong>${escapeHtml(video.vName)}</strong><small>${escapeHtml(video.vNumber || '')}</small></td><td>${escapeHtml(video.vType)}<small>${escapeHtml(video.vSeason || '')}</small></td><td>${escapeHtml(video.vAuthor || '')}<small>${escapeHtml(video.vSeries || '')}</small></td><td>${escapeHtml(video.vTag || '')}</td><td>${escapeHtml(video.vRank || '')}</td><td><small>${escapeHtml(video.vFile || '')}</small></td><td><button class="secondary" data-manage="play">播放</button> <button class="secondary" data-manage="edit">编辑</button> <button class="secondary" data-manage="delete">删除</button></td></tr>`).join('');
+    $('manageRows').innerHTML = list.map(video => `<tr data-id="${video.id}"><td><strong>${escapeHtml(video.vName)}</strong><small>${escapeHtml(video.vNumber || '')}</small></td><td>${escapeHtml(video.vType)}<small>${escapeHtml(video.vSeason || '')}</small></td><td>${escapeHtml(video.vAuthor || '')}<small>${escapeHtml(video.vSeries || '')}</small></td><td>${escapeHtml(video.vTag || '')}</td><td>${escapeHtml(video.vRank || '')}</td><td><small>${escapeHtml(video.vFile || '')}</small></td><td><button class="secondary" data-manage="play">播放</button> <button class="secondary" data-manage="edit">编辑</button> <button class="secondary" data-manage="delete">删除</button></td></tr>`).join(''); 
   }
   function editManagedRow(row) { const video = managedVideos.find(item => String(item.id) === row.dataset.id); row.innerHTML = `<td colspan="7"><div class="grid"><div class="field"><label>名称</label><input data-edit="vName" value="${escapeHtml(video.vName)}"></div><div class="field"><label>编号</label><input data-edit="vNumber" value="${escapeHtml(video.vNumber)}"></div><div class="field"><label>类型</label><input data-edit="vType" value="${escapeHtml(video.vType)}"></div><div class="field"><label>评级</label><input data-edit="vRank" value="${escapeHtml(video.vRank)}"></div><div class="field"><label>标签</label><input data-edit="vTag" value="${escapeHtml(video.vTag || '')}"></div></div><div class="actions"><button class="primary" data-manage="save">保存</button><button class="secondary" data-manage="cancel">取消</button></div></td>`; }
   $('manageRows').onclick = async event => { const button = event.target.closest('[data-manage]'); if (!button) return; const row = button.closest('tr'); const id = row.dataset.id; const video = managedVideos.find(item => String(item.id) === id); try { if (button.dataset.manage === 'play') { const response = await fetch(apiUrl(`/videos/${id}/open`), { method:'POST' }); if (!response.ok) throw new Error('无法打开本地文件'); $('manageStatus').textContent = '已请求系统默认播放器打开文件'; } else if (button.dataset.manage === 'edit') editManagedRow(row); else if (button.dataset.manage === 'cancel') renderManagedVideos(); else if (button.dataset.manage === 'save') { const updated = { ...video }; row.querySelectorAll('[data-edit]').forEach(input => updated[input.dataset.edit] = input.value.trim() || null); if (updated.vName && (updated.vNumber || updated.vSeries || updated.vSeason)) throw new Error('名称不能与编号、系列或季同时填写'); const response = await fetch(apiUrl(`/videos/${id}`), { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(updated) }); if (!response.ok) throw new Error(`HTTP ${response.status}`); await loadManagedVideos(); } else if (button.dataset.manage === 'delete' && confirm('确定删除数据库记录及本地文件吗？')) { const response = await fetch(apiUrl(`/videos/${id}`), { method:'DELETE' }); if (!response.ok) throw new Error(`HTTP ${response.status}`); await loadManagedVideos(); } } catch (error) { $('manageStatus').textContent = `操作失败：${error.message}`; } };
   $('manageBtn').onclick = () => showPage('manage'); $('archiveBtn').onclick = () => showPage('archive'); $('manageSettingsBtn').onclick = () => $('settingsBtn').click(); $('manageRefresh').onclick = loadManagedVideos; $('manageSearch').onkeydown = event => { if (event.key === 'Enter') loadManagedVideos(); };
   document.querySelectorAll('input[name="manageRating"]').forEach(radio => radio.addEventListener('change', renderManagedVideos));
   $('submitBtn').onclick = () => submit('batch'); $('classifyBtn').onclick = () => submit('classify'); ['rootDirectory','vType','vAuthor','vSeries','vSeason'].forEach(id => $(id).addEventListener('input', updatePathPreview)); updatePathPreview();
-  $('dropZone').onclick = () => $('filePicker').click();
-  $('folderBtn').onclick = () => $('folderPicker').click();
-  $('filePicker').onchange = event => setFiles(event.target.files);
-  $('folderPicker').onchange = event => setFiles(event.target.files);
-  $('dropZone').ondragover = event => { event.preventDefault(); $('dropZone').classList.add('over'); };
-  $('dropZone').ondragleave = () => $('dropZone').classList.remove('over');
-  $('dropZone').ondrop = event => { event.preventDefault(); $('dropZone').classList.remove('over'); setFiles(event.dataTransfer.files); };
-
+  $('dropZone').onclick = () => $('filePicker').click(); 
+  $('folderBtn').onclick = () => $('folderPicker').click(); 
+  $('filePicker').onchange = event => setFiles(event.target.files); 
+  $('folderPicker').onchange = event => setFiles(event.target.files); 
+  $('dropZone').ondragover = event => { event.preventDefault(); $('dropZone').classList.add('over'); }; 
+  $('dropZone').ondragleave = () => $('dropZone').classList.remove('over'); 
+  $('dropZone').ondrop = event => { event.preventDefault(); $('dropZone').classList.remove('over'); setFiles(event.dataTransfer.files); }; 
+  
   // 添加 chooseDirectory 函数用于从资源管理器选择目录
   async function chooseDirectory(inputId) {
     try {
@@ -241,8 +246,8 @@
       alert('无法打开目录选择器，请手动输入路径。');
     }
   }
-
-  renderFiles();
+  
+  renderFiles(); 
   checkBackend();
 </script>
 </body>

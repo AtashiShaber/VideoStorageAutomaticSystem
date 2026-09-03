@@ -1,1 +1,1 @@
-Nothing needs to be added to .gitignore since only a source file (index.html) was modified and no build artifacts, dependencies, or temporary files were detected in the changes.
+Nothing needs to be added to the .gitignore file based on the provided file changes. The modified files (VideoService.kt, schema.sql, index.html) are all source/config files that should be tracked in version control.
