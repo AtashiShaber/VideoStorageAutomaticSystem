@@ -32,12 +32,14 @@ class VideoService(
         )
         val movedFiles = videoFileStorageService.classifyFiles(
             rootDirectory = rootDirectory,
+            currentDirectory = request.currentDirectory,
             vType = safeType,
             selectedFiles = request.selectedFiles,
             vName = resolvedName,
             vAuthor = request.vAuthor,
             vSeries = request.vSeries,
-            vSeason = request.vSeason
+            vSeason = request.vSeason,
+            vNumber = request.vNumber
         )
 
         val savedNames = mutableListOf<String>()
