@@ -112,16 +112,20 @@
   const $ = (id) => document.getElementById(id);
   const state = { files: [] };
   const storedRoot = localStorage.getItem('videoRootDirectory') || '';
+  const storedCurrent = localStorage.getItem('videoCurrentDirectory') || '';
   const storedApi = localStorage.getItem('videoApiBase') || 'http://localhost:8080';
   let backendOnline = false;
   $('rootDirectory').value = storedRoot;
+  $('currentDirectory').value = storedCurrent;
   if (!storedRoot || !localStorage.getItem('videoApiBase')) {
     $('settingsModal').hidden = false;
   }
 
-  function savePaths(root = $('rootDirectory').value) {
+  function savePaths(root = $('rootDirectory').value, current = $('currentDirectory').value) {
     $('rootDirectory').value = root.trim();
+    $('currentDirectory').value = current.trim();
     localStorage.setItem('videoRootDirectory', $('rootDirectory').value);
+    localStorage.setItem('videoCurrentDirectory', $('currentDirectory').value);
   }
   function saveApiBase(value) { localStorage.setItem('videoApiBase', value.trim().replace(/\/$/, '')); }
   function closeSettings() { 
@@ -153,6 +157,7 @@
   };
 
   $('settingsBtn').onclick = openSettings;
+  $('manageSettingsBtn').onclick = openSettings;
 
   function setFiles(fileList) { state.files = [...fileList].filter(file => file.name); renderFiles(); }
   function renderFiles() {
@@ -181,7 +186,21 @@
   async function checkBackend() { try { const response = await fetch(apiUrl('/videos'), { signal:AbortSignal.timeout(2500) }); backendOnline = response.ok; $('apiDot').classList.toggle('ready', backendOnline); $('apiStatus').textContent = backendOnline ? '后端已连接' : '后端未上线，可离线配置'; } catch (_) { backendOnline = false; $('apiStatus').textContent = '后端未上线，可离线配置'; } }
   let managedVideos = [];
   function showPage(page) { $('archivePage').hidden = page !== 'archive'; $('managePage').hidden = page !== 'manage'; if (page === 'manage') loadManagedVideos(); }
-  async function loadManagedVideos() { $('manageStatus').textContent = '正在加载…'; try { const keyword = $('manageSearch').value.trim(); const path = keyword ? `/videos/search?keyword=${encodeURIComponent(keyword)}` : '/videos'; const response = await fetch(apiUrl(path)); if (!response.ok) throw new Error(`HTTP ${response.status}`); managedVideos = await response.json(); renderManagedVideos(); $('manageStatus').textContent = `已加载 ${managedVideos.length} 条记录`; } catch (error) { $('manageStatus').textContent = `加载失败：${error.message}`; $('manageRows').innerHTML = '<tr><td colspan="7" class="hint">无法连接后端。</td></tr>'; } }
+  async function loadManagedVideos() { 
+    $('manageStatus').textContent = '正在加载…'; 
+    try { 
+      const keyword = $('manageSearch').value.trim(); 
+      const path = keyword ? `/videos/search?keyword=${encodeURIComponent(keyword)}` : '/videos'; 
+      const response = await fetch(apiUrl(path)); 
+      if (!response.ok) throw new Error(`HTTP ${response.status}`); 
+      managedVideos = await response.json(); 
+      renderManagedVideos(); 
+      $('manageStatus').textContent = `已加载 ${managedVideos.length} 条记录`; 
+    } catch (error) { 
+      $('manageStatus').textContent = `加载失败：${error.message}`; 
+      $('manageRows').innerHTML = '<tr><td colspan="7" class="hint">无法连接后端。</td></tr>'; 
+    } 
+  }
   function getSelectedRating() { return document.querySelector('input[name="manageRating"]:checked')?.value || 'safe'; }
   function renderManagedVideos() { 
     const showAll = getSelectedRating() === 'all'; 

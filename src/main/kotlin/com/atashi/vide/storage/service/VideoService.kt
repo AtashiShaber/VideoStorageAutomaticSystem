@@ -49,6 +49,8 @@ class VideoService(
                 val targetFileName = movedFiles.find { it.contains(fileName.substringBeforeLast('.', "")) || it == fileName }
                     ?: fileName
 
+                val vFilePath = if (targetFileName.isBlank()) typeDirectory.toString() else typeDirectory.resolve(targetFileName).toString()
+
                 val saved = Video(
                     vName = resolvedName ?: targetFileName,
                     vType = safeType,
@@ -58,7 +60,7 @@ class VideoService(
                     vSeries = request.vSeries,
                     vSeason = request.vSeason,
                     vNumber = request.vNumber,
-                    vFile = if (targetFileName.isBlank()) typeDirectory.toString() else typeDirectory.resolve(targetFileName).toString()
+                    vFile = vFilePath.takeIf { it.isNotBlank() }
                 )
 
                 videoMapper.insert(saved)

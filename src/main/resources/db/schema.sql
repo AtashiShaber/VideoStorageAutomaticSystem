@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS video (
     v_series VARCHAR(255),
     v_season VARCHAR(50),
     v_number VARCHAR(50),
-    v_file TEXT NOT NULL
+    v_file TEXT
 );
 
 ALTER TABLE video
