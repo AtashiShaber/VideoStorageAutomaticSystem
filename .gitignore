@@ -1,8 +1,1 @@
-.gradle/
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!gradle/wrapper/gradle-wrapper.properties
-out/
-.idea/
-*.iml
-.DS_Store
+Nothing needs to be added to .gitignore since only a source file (index.html) was modified and no build artifacts, dependencies, or temporary files were detected in the changes.
