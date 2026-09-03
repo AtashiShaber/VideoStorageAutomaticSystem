@@ -6,9 +6,9 @@ import com.atashi.vide.storage.dto.VideoBatchResponse
 import com.atashi.vide.storage.entity.Video
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.awt.Desktop
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.awt.Desktop
 
 @Service
 class VideoService(
@@ -32,14 +32,12 @@ class VideoService(
         )
         val movedFiles = videoFileStorageService.classifyFiles(
             rootDirectory = rootDirectory,
-            currentDirectory = request.currentDirectory,
             vType = safeType,
             selectedFiles = request.selectedFiles,
             vName = resolvedName,
             vAuthor = request.vAuthor,
             vSeries = request.vSeries,
-            vSeason = request.vSeason,
-            vNumber = request.vNumber
+            vSeason = request.vSeason
         )
 
         val savedNames = mutableListOf<String>()
@@ -135,5 +133,12 @@ class VideoService(
         if (!file.isFile || !Desktop.isDesktopSupported()) return false
         Desktop.getDesktop().open(file)
         return true
+    }
+
+    @Transactional
+    fun renameVideo(videoId: Long, newName: String) {
+        val video = videoMapper.selectById(videoId) ?: throw IllegalArgumentException("Video not found")
+        video.vName = newName.trim()
+        videoMapper.update(video)
     }
 }

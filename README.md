@@ -140,7 +140,7 @@ Copy-Item index.html src/main/resources/static/index.html -Force
 Windows：
 
 ```powershell
-./gradlew.bat test
+.\gradlew test
 ```
 
 构建可执行 JAR：
@@ -152,13 +152,13 @@ Windows：
 Windows：
 
 ```powershell
-./gradlew.bat bootJar
+.\gradlew bootJar
 ```
 
 生成文件：
 
 ```text
-build/libs/VideoStorageAutomaticSystem-0.1.0.jar
+build\\libs\\VideoStorageAutomaticSystem-0.1.0.jar
 ```
 
 运行打包文件：
@@ -173,7 +173,7 @@ Windows PowerShell：
 java -jar .\\build\\libs\\VideoStorageAutomaticSystem-0.1.0.jar
 ```
 
-建议在项目或 JAR 所在目录启动程序，H2 数据默认保存在当前目录的 `data/videostorage`。迁移程序时请同时备份 `data` 目录和视频存储目录。
+建议在项目或 JAR 所在目录启动程序，H2 数据默认保存在当前目录的 `data\\videostorage`。迁移程序时请同时备份 `data` 目录和视频存储目录。
 
 ### 4. H2 控制台
 数据库使用 H2 嵌入式文件数据库，配置如下：
