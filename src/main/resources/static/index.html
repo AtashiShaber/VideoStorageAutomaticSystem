@@ -204,7 +204,12 @@
   function getSelectedRating() { return document.querySelector('input[name="manageRating"]:checked')?.value || 'safe'; }
   function renderManagedVideos() { 
     const showAll = getSelectedRating() === 'all'; 
-    const list = managedVideos.filter(video => showAll || String(video.vRank || '').trim() !== '18+'); 
+    const list = managedVideos.filter(video => {
+      // 跳过没有有效数据的记录（如只有路径的空记录）
+      if (!video.vName || video.vName.trim() === '') return false;
+      // 根据评级过滤
+      return showAll || String(video.vRank || '').trim() !== '18+';
+    }); 
     if (list.length === 0) {
       $('manageRows').innerHTML = '<tr><td colspan="7" class="hint">没有匹配的视频。</td></tr>';
       return;
