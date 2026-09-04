@@ -100,6 +100,9 @@
             <if test="file != null and file != ''">
                 AND LOWER(v_file) LIKE LOWER(CONCAT('%', #{file}, '%'))
             </if>
+            <if test="excludeRank != null and excludeRank != ''">
+                AND (v_rank IS NULL OR v_rank = '' OR LOWER(v_rank) != LOWER(#{excludeRank}))
+            </if>
         </where>
         ORDER BY id DESC
     </select>

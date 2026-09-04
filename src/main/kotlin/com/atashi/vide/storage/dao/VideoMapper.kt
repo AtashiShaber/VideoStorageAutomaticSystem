@@ -26,6 +26,7 @@ interface VideoMapper {
         @Param("series") series: String?,
         @Param("season") season: String?,
         @Param("number") number: String?,
-        @Param("file") file: String?
+        @Param("file") file: String?,
+        @Param("excludeRank") excludeRank: String?
     ): List<Video>
 }

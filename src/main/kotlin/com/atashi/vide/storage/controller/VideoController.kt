@@ -72,7 +72,8 @@ class VideoController(
         @RequestParam(name = "series", required = false) series: String?,
         @RequestParam(name = "season", required = false) season: String?,
         @RequestParam(name = "number", required = false) number: String?,
-        @RequestParam(name = "file", required = false) file: String?
+        @RequestParam(name = "file", required = false) file: String?,
+        @RequestParam(name = "excludeRank", required = false) excludeRank: String?
     ): ResponseEntity<List<Video>> {
         val finalKeyword = keyword ?: q
         val results = videoService.searchVideos(
@@ -85,7 +86,8 @@ class VideoController(
             series = series,
             season = season,
             number = number,
-            file = file
+            file = file,
+            excludeRank = excludeRank
         )
         return ResponseEntity.ok(results)
     }
