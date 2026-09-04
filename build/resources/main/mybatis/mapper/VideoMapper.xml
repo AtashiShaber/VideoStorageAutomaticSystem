@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.atashi.vide.storage.dao.VideoMapper">
+    <resultMap id="VideoMap" type="com.atashi.vide.storage.entity.Video">
+        <id property="id" column="id"/>
+        <result property="vName" column="v_name"/>
+        <result property="vType" column="v_type"/>
+        <result property="vRank" column="v_rank"/>
+        <result property="vAuthor" column="v_author"/>
+        <result property="vTag" column="v_tag"/>
+        <result property="vSeries" column="v_series"/>
+        <result property="vSeason" column="v_season"/>
+        <result property="vNumber" column="v_number"/>
+        <result property="vFile" column="v_file"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.atashi.vide.storage.entity.Video" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO video (v_name, v_type, v_rank, v_author, v_tag, v_series, v_season, v_number, v_file)
+        VALUES (#{vName}, #{vType}, #{vRank}, #{vAuthor}, #{vTag}, #{vSeries}, #{vSeason}, #{vNumber}, #{vFile})
+    </insert>
+
+    <select id="selectById" parameterType="long" resultMap="VideoMap">
+        SELECT id, v_name, v_type, v_rank, v_author, v_tag, v_series, v_season, v_number, v_file
+        FROM video
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultMap="VideoMap">
+        SELECT id, v_name, v_type, v_rank, v_author, v_tag, v_series, v_season, v_number, v_file
+        FROM video
+        ORDER BY id DESC
+    </select>
+
+    <update id="update" parameterType="com.atashi.vide.storage.entity.Video">
+        UPDATE video
+        SET v_name = #{vName},
+            v_type = #{vType},
+            v_rank = #{vRank},
+            v_author = #{vAuthor},
+            v_tag = #{vTag},
+            v_series = #{vSeries},
+            v_season = #{vSeason},
+            v_number = #{vNumber},
+            v_file = #{vFile}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM video
+        WHERE id = #{id}
+    </delete>
+
+    <select id="searchByCondition" resultMap="VideoMap">
+        SELECT id, v_name, v_type, v_rank, v_author, v_tag, v_series, v_season, v_number, v_file
+        FROM video
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    LOWER(v_name) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+                    OR LOWER(v_type) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+                    OR LOWER(v_author) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+                    OR LOWER(v_series) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+                    OR LOWER(v_tag) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+                    OR LOWER(v_rank) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+                    OR LOWER(v_season) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+                )
+            </if>
+            <if test="name != null and name != ''">
+                AND LOWER(v_name) LIKE LOWER(CONCAT('%', #{name}, '%'))
+            </if>
+            <if test="type != null and type != ''">
+                AND LOWER(v_type) LIKE LOWER(CONCAT('%', #{type}, '%'))
+            </if>
+            <if test="rank != null and rank != ''">
+                AND LOWER(v_rank) LIKE LOWER(CONCAT('%', #{rank}, '%'))
+            </if>
+            <if test="author != null and author != ''">
+                AND LOWER(v_author) LIKE LOWER(CONCAT('%', #{author}, '%'))
+            </if>
+            <if test="tag != null and tag != ''">
+                AND (
+                    LOWER(v_tag) LIKE LOWER(CONCAT('%', #{tag}, '%'))
+                    OR LOWER(v_tag) LIKE LOWER(CONCAT('%', #{tag}, ' %'))
+                    OR LOWER(v_tag) LIKE LOWER(CONCAT('% ', #{tag}, '%'))
+                    OR LOWER(v_tag) LIKE LOWER(CONCAT('% ', #{tag}, ' %'))
+                )
+            </if>
+            <if test="series != null and series != ''">
+                AND LOWER(v_series) LIKE LOWER(CONCAT('%', #{series}, '%'))
+            </if>
+            <if test="season != null and season != ''">
+                AND LOWER(v_season) LIKE LOWER(CONCAT('%', #{season}, '%'))
+            </if>
+            <if test="number != null and number != ''">
+                AND LOWER(v_number) LIKE LOWER(CONCAT('%', #{number}, '%'))
+            </if>
+            <if test="file != null and file != ''">
+                AND LOWER(v_file) LIKE LOWER(CONCAT('%', #{file}, '%'))
+            </if>
+            <if test="excludeRank != null and excludeRank != ''">
+                AND (v_rank IS NULL OR v_rank = '' OR LOWER(v_rank) != LOWER(#{excludeRank}))
+            </if>
+        </where>
+        ORDER BY id DESC
+    </select>
+</mapper>
