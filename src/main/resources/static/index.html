@@ -46,12 +46,12 @@
         <h2>1. 选择视频</h2>
         <div class="drop" id="dropZone"><div><strong>点击选择，或拖入视频文件</strong><span>会打开 Windows 资源管理器，可多选文件或选择文件夹</span></div><input id="filePicker" type="file" accept="video/*,.mkv,.mp4,.avi,.mov,.webm" multiple hidden><input id="folderPicker" type="file" webkitdirectory directory multiple hidden></div>
         <div class="file-list" id="fileList"><p class="hint">还没有选择文件。</p></div>
-        <div class="actions"><button class="secondary" id="folderBtn" type="button">从资源管理器选择文件夹</button><span class="hint">浏览器不会暴露绝对路径，来源目录仍需在右侧配置。</span></div>
+        <div class="actions"><button class="secondary" id="folderBtn" type="button">从资源管理器选择文件夹</button><span class="hint">浏览器不会暴露绝对路径，文件通过 File API 直接读取。</span></div>
       </section>
       <aside class="panel storage-panel">
         <h2>存储位置</h2>
         <div class="field"><label for="rootDirectory">Video 存储根目录</label><input id="rootDirectory" type="text" placeholder="例如 D:\Videos"><button class="secondary" type="button" onclick="chooseDirectory('rootDirectory')">从资源管理器选择</button><p class="hint">路径保存在浏览器 localStorage。</p></div>
-        <div class="field" style="margin-top:15px"><label for="currentDirectory">当前来源目录</label><input id="currentDirectory" type="text" placeholder="例如 D:\Inbox"><button class="secondary" type="button" onclick="chooseDirectory('currentDirectory')">从资源管理器选择</button><p class="hint">后端按此路径查找并移动选中的文件。</p></div>
+        <div class="field" style="margin-top:15px"><label for="currentDirectory">当前来源目录（可选）</label><input id="currentDirectory" type="text" placeholder="例如 D:\Inbox"><p class="hint">仅当后端与前端在同一机器上时需要填写，用于指定原始文件所在目录。</p></div>
         <div class="path-preview"><strong>归档路径预览</strong><code id="pathPreview">请先填写类型</code></div>
         <div class="actions"><button class="secondary" id="savePaths" type="button">保存路径</button></div>
       </aside>
@@ -101,9 +101,8 @@
     <div class="modal">
       <div class="modal-head"><h2>首次设置路径</h2><button class="close" type="button" aria-label="关闭" onclick="closeSettings()">×</button></div>
       <p class="subtitle">即使后端尚未启动，也可以先选择文件、填写信息和保存草稿。</p>
-      <div class="field"><label for="modalApi">后端 API 地址</label><input id="modalApi" type="url" placeholder="例如 http://localhost:8080"><p class="hint">不要填写 index.html 所在的端口；后端上线后再执行归档。</p></div>
+      <div class="field"><label for="modalApi">后端 API 地址</label><input id="modalApi" type="url" placeholder="例如 http://localhost:8080"><p class="hint">本地运行填写 http://localhost:8080；若前端单独部署，填写后端服务器完整地址。</p></div>
       <div class="field" style="margin-top:14px"><label for="modalRoot">Video 存储根目录</label><input id="modalRoot" type="text" placeholder="例如 D:\Videos"><button class="secondary" type="button" onclick="chooseDirectory('modalRoot')">从资源管理器选择</button></div>
-      <div class="field" style="margin-top:14px"><label for="modalCurrent">当前来源目录</label><input id="modalCurrent" type="text" placeholder="例如 D:\Inbox"><button class="secondary" type="button" onclick="chooseDirectory('modalCurrent')">从资源管理器选择</button></div>
       <div class="actions"><button class="primary" id="modalSave" type="button">保存并开始</button><button class="secondary" id="modalCancel" type="button">暂时关闭</button></div>
       <p class="error" id="modalError"></p>
     </div>
@@ -138,7 +137,7 @@
   function openSettings() {
     $('modalApi').value = localStorage.getItem('videoApiBase') || 'http://localhost:8080';
     $('modalRoot').value = $('rootDirectory').value;
-    $('modalCurrent').value = $('currentDirectory').value || '';
+    // modalCurrent 已移除，不再使用
     $('modalError').textContent = '';
     $('settingsModal').hidden = false;
   }
@@ -151,7 +150,7 @@
   $('modalCancel').onclick = closeSettings;
   $('modalSave').onclick = () => {
     saveApiBase($('modalApi').value || 'http://localhost:8080');
-    savePaths($('modalRoot').value, $('modalCurrent').value);
+    savePaths($('modalRoot').value, '');
     closeSettings();
     showMessage('设置已保存；后端上线后即可归档。', true);
   };
