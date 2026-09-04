@@ -93,7 +93,8 @@ class VideoService(
         series: String? = null,
         season: String? = null,
         number: String? = null,
-        file: String? = null
+        file: String? = null,
+        excludeRank: String? = null
     ): List<Video> {
         return videoMapper.searchByCondition(
             keyword = keyword,
@@ -105,7 +106,8 @@ class VideoService(
             series = series,
             season = season,
             number = number,
-            file = file
+            file = file,
+            excludeRank = excludeRank
         )
     }
 
