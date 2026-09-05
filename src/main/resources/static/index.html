@@ -938,6 +938,7 @@
           vSeason: formValue("vSeason") || null,
           vNumber: item.number || null,
           selectedFiles: [state.files[index].name],
+          sourceDirectory: null, // 不再使用源目录，文件通过上传传输
         };
         if (mode === "classify") delete data.vRank;
         return data;

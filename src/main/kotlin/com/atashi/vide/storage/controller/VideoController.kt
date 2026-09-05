@@ -43,7 +43,8 @@ class VideoController(
             vAuthor = request.vAuthor,
             vSeries = request.vSeries,
             vSeason = request.vSeason,
-            vNumber = request.vNumber
+            vNumber = request.vNumber,
+            sourceDirectory = request.sourceDirectory
         )
 
         return VideoClassifyResponse(

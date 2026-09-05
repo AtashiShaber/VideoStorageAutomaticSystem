@@ -51,7 +51,8 @@ class VideoFileStorageService {
         vAuthor: String? = null,
         vSeries: String? = null,
         vSeason: String? = null,
-        vNumber: String? = null
+        vNumber: String? = null,
+        sourceDirectory: String? = null
     ): List<String> {
         val resolvedName = normalizeCustomName(vName)
         validateNameOverride(resolvedName, vSeries, vSeason, vNumber)
@@ -59,16 +60,25 @@ class VideoFileStorageService {
         val targetDirectory = buildTypeDirectory(rootDirectory, vType, vAuthor, vSeries, vSeason)
         Files.createDirectories(targetDirectory)
 
-        // 注意：由于前端不再提供 currentDirectory，selectedFiles 仅包含文件名
-        // 文件已通过浏览器 File API 读取，这里只需要处理目标路径的创建
-        // 实际文件移动/复制操作需要后端能够访问源文件，但这在 Web 应用中不可行
-        // 因此，这个函数现在只返回目标文件名列表，真正的文件传输需要其他方式（如上传）
         val movedFiles = mutableListOf<String>()
 
         selectedFiles
             .filter { it.isNotBlank() }
             .forEach { fileName ->
                 val targetName = buildTargetFileName(fileName, resolvedName, vSeries, vSeason, vNumber)
+                val targetPath = targetDirectory.resolve(targetName)
+                
+                // 如果提供了源目录，尝试移动文件
+                if (!sourceDirectory.isNullOrBlank()) {
+                    val sourcePath = Paths.get(sourceDirectory).resolve(fileName)
+                    if (Files.exists(sourcePath) && Files.isRegularFile(sourcePath)) {
+                        Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING)
+                        movedFiles.add(targetName)
+                        return@forEach
+                    }
+                }
+                
+                // 如果没有源目录或源文件不存在，只返回目标文件名（文件已上传）
                 movedFiles.add(targetName)
             }
 
