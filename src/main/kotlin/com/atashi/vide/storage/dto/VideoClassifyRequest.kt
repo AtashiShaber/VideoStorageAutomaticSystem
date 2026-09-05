@@ -2,7 +2,6 @@ package com.atashi.vide.storage.dto
 
 data class VideoClassifyRequest(
     val rootDirectory: String = "",
-    val currentDirectory: String = "",
     val vName: String? = null,
     val vType: String = "",
     val vAuthor: String? = null,
@@ -22,7 +21,6 @@ data class VideoClassifyResponse(
 
 data class VideoBatchRequest(
     val rootDirectory: String = "",
-    val currentDirectory: String = "",
     val vName: String? = null,
     val vType: String = "",
     val vRank: String = "",

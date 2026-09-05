@@ -31,9 +31,8 @@ class VideoService(
             vSeason = request.vSeason
         )
         val movedFiles = videoFileStorageService.classifyFiles(
-            rootDirectory = rootDirectory,
-            currentDirectory = request.currentDirectory,
-            vType = safeType,
+            rootDirectory = request.rootDirectory,
+            vType = request.vType,
             selectedFiles = request.selectedFiles,
             vName = resolvedName,
             vAuthor = request.vAuthor,

@@ -51,7 +51,6 @@
       <aside class="panel storage-panel">
         <h2>存储位置</h2>
         <div class="field"><label for="rootDirectory">Video 存储根目录</label><input id="rootDirectory" type="text" placeholder="例如 D:\Videos"><button class="secondary" type="button" onclick="chooseDirectory('rootDirectory')">从资源管理器选择</button><p class="hint">路径保存在浏览器 localStorage。</p></div>
-        <div class="field" style="margin-top:15px"><label for="currentDirectory">当前来源目录（可选）</label><input id="currentDirectory" type="text" placeholder="例如 D:\Inbox"><p class="hint">仅当后端与前端在同一机器上时需要填写，用于指定原始文件所在目录。</p></div>
         <div class="path-preview"><strong>归档路径预览</strong><code id="pathPreview">请先填写类型</code></div>
         <div class="actions"><button class="secondary" id="savePaths" type="button">保存路径</button></div>
       </aside>
@@ -111,20 +110,34 @@
   const $ = (id) => document.getElementById(id);
   const state = { files: [] };
   const storedRoot = localStorage.getItem('videoRootDirectory') || '';
-  const storedCurrent = localStorage.getItem('videoCurrentDirectory') || '';
   const storedApi = localStorage.getItem('videoApiBase') || 'http://localhost:8080';
   let backendOnline = false;
   $('rootDirectory').value = storedRoot;
-  $('currentDirectory').value = storedCurrent;
   if (!storedRoot || !localStorage.getItem('videoApiBase')) {
     $('settingsModal').hidden = false;
   }
 
-  function savePaths(root = $('rootDirectory').value, current = $('currentDirectory').value) {
+  // 添加 chooseDirectory 函数用于从资源管理器选择目录（必须在 HTML onclick 之前定义）
+  async function chooseDirectory(inputId) {
+    try {
+      const response = await fetch(apiUrl('/videos/choose-directory'));
+      if (response.status === 204) return; // 用户取消选择
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      if (data.path) {
+        $(inputId).value = data.path;
+        if (inputId === 'rootDirectory' || inputId === 'modalRoot') savePaths(data.path);
+        updatePathPreview();
+      }
+    } catch (error) {
+      console.error('选择目录失败:', error);
+      alert('无法打开目录选择器，请手动输入路径。');
+    }
+  }
+
+  function savePaths(root = $('rootDirectory').value) {
     $('rootDirectory').value = root.trim();
-    $('currentDirectory').value = current.trim();
     localStorage.setItem('videoRootDirectory', $('rootDirectory').value);
-    localStorage.setItem('videoCurrentDirectory', $('currentDirectory').value);
   }
   function saveApiBase(value) { localStorage.setItem('videoApiBase', value.trim().replace(/\/$/, '')); }
   function closeSettings() { 
@@ -150,7 +163,7 @@
   $('modalCancel').onclick = closeSettings;
   $('modalSave').onclick = () => {
     saveApiBase($('modalApi').value || 'http://localhost:8080');
-    savePaths($('modalRoot').value, '');
+    savePaths($('modalRoot').value);
     closeSettings();
     showMessage('设置已保存；后端上线后即可归档。', true);
   };
@@ -173,7 +186,7 @@
   function updatePathPreview() { const parts = [formValue('rootDirectory'), formValue('vType'), formValue('vAuthor'), formValue('vSeries'), formValue('vSeason')].filter(Boolean); $('pathPreview').textContent = parts.length > 1 ? parts.join(' / ') : '请先填写类型'; }
   function validate(values) { if (!formValue('rootDirectory')) return '请先填写并保存本地路径。'; if (!formValue('vType')) return '类型不能为空。'; if (!state.files.length) return '请先选择至少一个视频文件。'; if (values.vName && (values.vSeries || values.vSeason || values.vNumber)) return '名称不能与系列、季或编号同时设置。'; return ''; }
   function showMessage(text, success = false) { $('message').className = success ? 'success' : 'error'; $('message').textContent = text; }
-  function commonData(index, mode) { const item = getPerFile(index); const data = { rootDirectory:formValue('rootDirectory'), currentDirectory:formValue('currentDirectory'), vName:item.name || null, vType:formValue('vType'), vRank:formValue('vRank'), vAuthor:formValue('vAuthor') || null, vTag:item.tag || formValue('vTag') || null, vSeries:formValue('vSeries') || null, vSeason:formValue('vSeason') || null, vNumber:item.number || null, selectedFiles:[state.files[index].name] }; if (mode === 'classify') delete data.vRank; return data; }
+  function commonData(index, mode) { const item = getPerFile(index); const data = { rootDirectory:formValue('rootDirectory'), vName:item.name || null, vType:formValue('vType'), vRank:formValue('vRank'), vAuthor:formValue('vAuthor') || null, vTag:item.tag || formValue('vTag') || null, vSeries:formValue('vSeries') || null, vSeason:formValue('vSeason') || null, vNumber:item.number || null, selectedFiles:[state.files[index].name] }; if (mode === 'classify') delete data.vRank; return data; }
   function saveOfflineDraft(mode, indexes) { const drafts = JSON.parse(localStorage.getItem('videoOfflineDrafts') || '[]'); drafts.push({ mode, createdAt: new Date().toISOString(), ...Object.fromEntries(indexes.map(index => [state.files[index].name, commonData(index, mode)])) }); localStorage.setItem('videoOfflineDrafts', JSON.stringify(drafts)); }
   async function submit(mode) {
     const indexes = selectedIndexes(); if (!indexes.length) { showMessage('请至少勾选一个文件。'); return; }
@@ -234,25 +247,6 @@
   $('dropZone').ondragover = event => { event.preventDefault(); $('dropZone').classList.add('over'); }; 
   $('dropZone').ondragleave = () => $('dropZone').classList.remove('over'); 
   $('dropZone').ondrop = event => { event.preventDefault(); $('dropZone').classList.remove('over'); setFiles(event.dataTransfer.files); }; 
-  
-  // 添加 chooseDirectory 函数用于从资源管理器选择目录
-  async function chooseDirectory(inputId) {
-    try {
-      const response = await fetch(apiUrl('/videos/choose-directory'));
-      if (response.status === 204) return; // 用户取消选择
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      if (data.path) {
-        $(inputId).value = data.path;
-        if (inputId === 'rootDirectory' || inputId === 'modalRoot') savePaths(data.path);
-        updatePathPreview();
-      }
-    } catch (error) {
-      console.error('选择目录失败:', error);
-      alert('无法打开目录选择器，请手动输入路径。');
-    }
-  }
-  
   renderFiles(); 
   checkBackend();
 </script>

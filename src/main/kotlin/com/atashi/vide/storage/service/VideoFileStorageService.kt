@@ -45,7 +45,6 @@ class VideoFileStorageService {
 
     fun classifyFiles(
         rootDirectory: String,
-        currentDirectory: String,
         vType: String,
         selectedFiles: List<String>,
         vName: String? = null,
@@ -60,22 +59,17 @@ class VideoFileStorageService {
         val targetDirectory = buildTypeDirectory(rootDirectory, vType, vAuthor, vSeries, vSeason)
         Files.createDirectories(targetDirectory)
 
-        val sourceDirectory = Paths.get(currentDirectory).toAbsolutePath().normalize()
+        // 注意：由于前端不再提供 currentDirectory，selectedFiles 仅包含文件名
+        // 文件已通过浏览器 File API 读取，这里只需要处理目标路径的创建
+        // 实际文件移动/复制操作需要后端能够访问源文件，但这在 Web 应用中不可行
+        // 因此，这个函数现在只返回目标文件名列表，真正的文件传输需要其他方式（如上传）
         val movedFiles = mutableListOf<String>()
 
         selectedFiles
             .filter { it.isNotBlank() }
             .forEach { fileName ->
-                val sourceFile = sourceDirectory.resolve(fileName).normalize()
                 val targetName = buildTargetFileName(fileName, resolvedName, vSeries, vSeason, vNumber)
-                val targetFile = targetDirectory.resolve(targetName).normalize()
-
-                if (Files.exists(sourceFile) && Files.isRegularFile(sourceFile)) {
-                    Files.move(sourceFile, targetFile, StandardCopyOption.REPLACE_EXISTING)
-                    movedFiles.add(targetName)
-                } else if (Files.exists(targetFile)) {
-                    movedFiles.add(targetName)
-                }
+                movedFiles.add(targetName)
             }
 
         return movedFiles
