@@ -1,0 +1,8 @@
+/workspace/src/main/kotlin/com/atashi/vide/storage/service/VideoService.kt
+/workspace/src/main/kotlin/com/atashi/vide/storage/entity/Video.kt
+/workspace/src/main/kotlin/com/atashi/vide/storage/config/MyBatisConfig.kt
+/workspace/src/main/kotlin/com/atashi/vide/storage/dao/VideoMapper.kt
+/workspace/src/main/kotlin/com/atashi/vide/storage/VideoStorageApplication.kt
+/workspace/src/main/kotlin/com/atashi/vide/storage/controller/VideoController.kt
+/workspace/src/main/kotlin/com/atashi/vide/storage/service/VideoFileStorageService.kt
+/workspace/src/main/kotlin/com/atashi/vide/storage/dto/VideoClassifyRequest.kt
