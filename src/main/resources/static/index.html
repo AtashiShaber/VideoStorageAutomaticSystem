@@ -539,8 +539,10 @@
           <div class="actions">
             <button class="secondary" id="folderBtn" type="button">
               从资源管理器选择文件夹</button
+            ><button class="secondary" id="sourceFolderBtn" type="button">
+              指定源文件夹路径</button
             ><span class="hint"
-              >浏览器不会暴露绝对路径，文件通过 File API 直接读取。</span
+              >选择源文件夹后，后端会将文件从该目录移动到归档目录。</span
             >
           </div>
         </section>
@@ -756,7 +758,7 @@
     </div>
     <script>
       const $ = (id) => document.getElementById(id);
-      const state = { files: [] };
+      const state = { files: [], sourceDirectory: null };
       const storedRoot = localStorage.getItem("videoRootDirectory") || "";
       const storedApi =
         localStorage.getItem("videoApiBase") || "http://localhost:8080";
@@ -775,9 +777,14 @@
           const data = await response.json();
           if (data.path) {
             $(inputId).value = data.path;
-            if (inputId === "rootDirectory" || inputId === "modalRoot")
+            if (inputId === "rootDirectory" || inputId === "modalRoot") {
               savePaths(data.path);
-            updatePathPreview();
+              updatePathPreview();
+            } else if (inputId === "sourceDirectory") {
+              // 保存源目录路径，用于文件移动操作
+              state.sourceDirectory = data.path;
+              localStorage.setItem("videoSourceDirectory", data.path);
+            }
           }
         } catch (error) {
           console.error("选择目录失败:", error);
@@ -938,7 +945,7 @@
           vSeason: formValue("vSeason") || null,
           vNumber: item.number || null,
           selectedFiles: [state.files[index].name],
-          sourceDirectory: null, // 不再使用源目录，文件通过上传传输
+          sourceDirectory: state.sourceDirectory || null, // 源目录用于文件移动
         };
         if (mode === "classify") delete data.vRank;
         return data;
