@@ -9,7 +9,8 @@ data class VideoClassifyRequest(
     val vSeries: String? = null,
     val vSeason: String? = null,
     val vNumber: String? = null,
-    val selectedFiles: List<String> = emptyList()
+    val selectedFiles: List<String> = emptyList(),
+    val sourceDirectory: String? = null
 )
 
 data class VideoClassifyResponse(
@@ -29,7 +30,8 @@ data class VideoBatchRequest(
     val vSeries: String? = null,
     val vSeason: String? = null,
     val vNumber: String? = null,
-    val selectedFiles: List<String> = emptyList()
+    val selectedFiles: List<String> = emptyList(),
+    val sourceDirectory: String? = null
 )
 
 data class VideoBatchResponse(

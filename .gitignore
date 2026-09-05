@@ -1,13 +1,16 @@
 ```
-# Gradle
-.gradle/
+# Compiled and build artifacts
+*.class
+*.o
+*.obj
+*.out
 build/
-
-# Database
-*.db
-
-# Environment
-.env
-.env.local
-*.env.*
+# Dependencies
+.gradle/
+# Logs and temp files
+*.log
+hs_err_pid*.log
+# Editors
+.vscode/
+.idea/
 ```
