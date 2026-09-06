@@ -34,6 +34,7 @@ class VideoController(
 
     @PostMapping("/classify")
     fun classifyFiles(@RequestBody request: VideoClassifyRequest): VideoClassifyResponse {
+        println("收到分类请求：$request")
         val typeDirectory = videoFileStorageService.buildTypeDirectory(request.rootDirectory, request.vType)
         val movedFiles = videoFileStorageService.classifyFiles(
             rootDirectory = request.rootDirectory,
@@ -57,6 +58,7 @@ class VideoController(
 
     @PostMapping("/batch")
     fun batchCreateAndClassify(@RequestBody request: VideoBatchRequest): VideoBatchResponse {
+        println("收到批量处理请求：$request")
         return videoService.classifyAndSave(request)
     }
 
