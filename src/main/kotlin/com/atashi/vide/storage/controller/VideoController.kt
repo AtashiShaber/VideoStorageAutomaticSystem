@@ -38,6 +38,7 @@ class VideoController(
         val typeDirectory = videoFileStorageService.buildTypeDirectory(request.rootDirectory, request.vType)
         val movedFiles = videoFileStorageService.classifyFiles(
             rootDirectory = request.rootDirectory,
+            currentDirectory = request.currentDirectory,
             vType = request.vType,
             selectedFiles = request.selectedFiles,
             vName = request.vName,

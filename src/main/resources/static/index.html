@@ -949,6 +949,7 @@
         const item = getPerFile(index);
         const data = {
           rootDirectory: formValue("rootDirectory"),
+          currentDirectory: state.sourceDirectory || null, // 当前目录（源文件夹）用于文件移动
           vName: item.name || null,
           vType: formValue("vType"),
           vRank: formValue("vRank"),
