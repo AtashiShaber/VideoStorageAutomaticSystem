@@ -45,6 +45,7 @@ class VideoFileStorageService {
 
     fun classifyFiles(
         rootDirectory: String,
+        currentDirectory: String? = null,
         vType: String,
         selectedFiles: List<String>,
         vName: String? = null,
@@ -68,9 +69,18 @@ class VideoFileStorageService {
                 val targetName = buildTargetFileName(fileName, resolvedName, vSeries, vSeason, vNumber)
                 val targetPath = targetDirectory.resolve(targetName)
                 
+                // 优先使用 sourceDirectory（前端指定的源文件夹）
+                val actualSourceDir = if (!sourceDirectory.isNullOrBlank()) {
+                    sourceDirectory
+                } else if (!currentDirectory.isNullOrBlank()) {
+                    currentDirectory
+                } else {
+                    null
+                }
+                
                 // 如果提供了源目录，尝试移动文件
-                if (!sourceDirectory.isNullOrBlank()) {
-                    val sourcePath = Paths.get(sourceDirectory).resolve(fileName).toAbsolutePath().normalize()
+                if (!actualSourceDir.isNullOrBlank()) {
+                    val sourcePath = Paths.get(actualSourceDir).resolve(fileName).toAbsolutePath().normalize()
                     println("尝试从源目录复制文件：$sourcePath")
                     println("目标路径：$targetPath")
                     if (Files.exists(sourcePath) && Files.isRegularFile(sourcePath)) {

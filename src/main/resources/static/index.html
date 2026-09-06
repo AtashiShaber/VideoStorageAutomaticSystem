@@ -536,14 +536,14 @@
               style="width: 200px; margin-left: 10px;"
             /><button
               class="secondary"
+              id="chooseSourceDirBtn"
               type="button"
-              onclick="chooseDirectory('sourceDirectory')"
               style="margin-left: 5px;"
             >
               选择
             </button
             ><span class="hint"
-              >选择源文件夹后，后端会将文件从该目录移动到归档目录。</span
+              >选择源文件夹后，后端会将文件从该目录移动到归档目录。如果无法弹出选择器，请直接在上方输入框手动输入路径。</span
             >
           </div>
         </section>
@@ -770,10 +770,17 @@
       }
 
       // 添加 chooseDirectory 函数用于从资源管理器选择目录（必须在 HTML onclick 之前定义）
+      // 注意：此功能需要后端运行在有图形界面的环境中
       async function chooseDirectory(inputId) {
         try {
           const response = await fetch(apiUrl("/videos/choose-directory"));
           if (response.status === 204) return; // 用户取消选择
+          if (response.status === 501) {
+            // 后端运行在无图形界面环境
+            console.warn("后端运行在无图形界面环境，无法使用目录选择器");
+            alert("后端服务运行在无图形界面的环境中，无法弹出目录选择器。\n\n请在输入框中手动输入路径，或将后端服务部署在有桌面环境的系统中。");
+            return;
+          }
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const data = await response.json();
           if (data.path) {
@@ -789,7 +796,12 @@
           }
         } catch (error) {
           console.error("选择目录失败:", error);
-          alert("无法打开目录选择器，请手动输入路径。");
+          // 提供更友好的错误提示
+          if (error.message.includes("Failed to fetch")) {
+            alert("无法连接到后端服务选择目录。\n\n请检查：\n1. 后端服务是否已启动\n2. 后端服务地址是否正确\n3. 网络连接是否正常\n\n您也可以直接在输入框中手动输入路径。");
+          } else {
+            alert("无法打开目录选择器，请手动输入路径。\n\n如果后端部署在服务器上，这是正常现象，请直接输入路径即可。");
+          }
         }
       }
 
@@ -937,6 +949,7 @@
         const item = getPerFile(index);
         const data = {
           rootDirectory: formValue("rootDirectory"),
+          currentDirectory: state.sourceDirectory || null, // 当前目录（源文件夹）用于文件移动
           vName: item.name || null,
           vType: formValue("vType"),
           vRank: formValue("vRank"),
@@ -1166,6 +1179,7 @@
       $("dropZone").onclick = () => $("filePicker").click();
       $("folderBtn").onclick = () => $("filePicker").click();
       $("sourceFolderBtn").onclick = () => chooseDirectory("sourceDirectory");
+      $("chooseSourceDirBtn").onclick = () => chooseDirectory("sourceDirectory");
       $("filePicker").onchange = (event) => setFiles(event.target.files);
       $("dropZone").ondragover = (event) => {
         event.preventDefault();

@@ -32,6 +32,7 @@ class VideoService(
         )
         val movedFiles = videoFileStorageService.classifyFiles(
             rootDirectory = request.rootDirectory,
+            currentDirectory = request.currentDirectory,
             vType = request.vType,
             selectedFiles = request.selectedFiles,
             vName = resolvedName,
