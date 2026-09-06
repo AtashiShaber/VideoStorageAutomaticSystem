@@ -1164,7 +1164,9 @@
       );
       updatePathPreview();
       $("dropZone").onclick = () => $("filePicker").click();
+      $("folderBtn").onclick = () => $("filePicker").click();
       $("sourceFolderBtn").onclick = () => chooseDirectory("sourceDirectory");
+      $("filePicker").onchange = (event) => setFiles(event.target.files);
       $("dropZone").ondragover = (event) => {
         event.preventDefault();
         $("dropZone").classList.add("over");
