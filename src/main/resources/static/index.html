@@ -527,7 +527,7 @@
             <p class="hint">还没有选择文件。</p>
           </div>
           <div class="actions">
-            <button class="secondary" id="folderBtn" type="button">从资源管理器选择文件夹</button
+            <button class="secondary" id="folderBtn" type="button">路径</button
             ><button class="secondary" id="sourceFolderBtn" type="button">指定源文件夹路径</button
             ><input
               id="sourceDirectory"
@@ -543,7 +543,7 @@
               选择
             </button
             ><span class="hint"
-              >选择源文件夹后，后端会将文件从该目录移动到归档目录。如果无法弹出选择器，请直接在上方输入框手动输入路径。</span
+              >点击"路径"按钮：如果已指定路径则打开该文件夹，否则打开文件选择器。选择源文件夹后，后端会将文件从该目录移动到归档目录。</span
             >
           </div>
         </section>
@@ -1177,7 +1177,17 @@
       );
       updatePathPreview();
       $("dropZone").onclick = () => $("filePicker").click();
-      $("folderBtn").onclick = () => $("filePicker").click();
+      // folderBtn 按钮逻辑：如果已指定路径则打开该文件夹，否则打开文件选择器
+      $("folderBtn").onclick = () => {
+        const sourceDir = $("sourceDirectory").value.trim();
+        if (sourceDir) {
+          // 已指定路径，尝试打开该文件夹（需要后端支持）
+          chooseDirectory("sourceDirectory");
+        } else {
+          // 未指定路径，打开文件选择器让用户选择文件
+          $("filePicker").click();
+        }
+      };
       $("sourceFolderBtn").onclick = () => chooseDirectory("sourceDirectory");
       $("chooseSourceDirBtn").onclick = () => chooseDirectory("sourceDirectory");
       $("filePicker").onchange = (event) => setFiles(event.target.files);
