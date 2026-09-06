@@ -523,24 +523,25 @@
               type="file"
               accept="video/*,.mkv,.mp4,.avi,.mov,.webm"
               multiple
-              hidden
-            /><input
-              id="folderPicker"
-              type="file"
-              webkitdirectory
-              directory
-              multiple
-              hidden
-            />
-          </div>
-          <div class="file-list" id="fileList">
+              hidden />
             <p class="hint">还没有选择文件。</p>
           </div>
           <div class="actions">
-            <button class="secondary" id="folderBtn" type="button">
-              从资源管理器选择文件夹</button
-            ><button class="secondary" id="sourceFolderBtn" type="button">
-              指定源文件夹路径</button
+            <button class="secondary" id="folderBtn" type="button">从资源管理器选择文件夹</button
+            ><button class="secondary" id="sourceFolderBtn" type="button">指定源文件夹路径</button
+            ><input
+              id="sourceDirectory"
+              type="text"
+              placeholder="源文件夹路径（可选）"
+              style="width: 200px; margin-left: 10px;"
+            /><button
+              class="secondary"
+              type="button"
+              onclick="chooseDirectory('sourceDirectory')"
+              style="margin-left: 5px;"
+            >
+              选择
+            </button
             ><span class="hint"
               >选择源文件夹后，后端会将文件从该目录移动到归档目录。</span
             >
@@ -1163,9 +1164,7 @@
       );
       updatePathPreview();
       $("dropZone").onclick = () => $("filePicker").click();
-      $("folderBtn").onclick = () => $("folderPicker").click();
-      $("filePicker").onchange = (event) => setFiles(event.target.files);
-      $("folderPicker").onchange = (event) => setFiles(event.target.files);
+      $("sourceFolderBtn").onclick = () => chooseDirectory("sourceDirectory");
       $("dropZone").ondragover = (event) => {
         event.preventDefault();
         $("dropZone").classList.add("over");

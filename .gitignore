@@ -69,3 +69,11 @@ Thumbs.db
 *.tar.bz2
 *.tar.xz
 *.tar.zst
+
+# Database
+data/*.db
+
+# Environment
+.env
+.env.local
+*.env.*

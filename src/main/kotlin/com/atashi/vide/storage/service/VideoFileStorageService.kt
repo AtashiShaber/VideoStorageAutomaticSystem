@@ -70,15 +70,21 @@ class VideoFileStorageService {
                 
                 // 如果提供了源目录，尝试移动文件
                 if (!sourceDirectory.isNullOrBlank()) {
-                    val sourcePath = Paths.get(sourceDirectory).resolve(fileName)
+                    val sourcePath = Paths.get(sourceDirectory).resolve(fileName).toAbsolutePath().normalize()
+                    println("尝试从源目录复制文件：$sourcePath")
+                    println("目标路径：$targetPath")
                     if (Files.exists(sourcePath) && Files.isRegularFile(sourcePath)) {
                         Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING)
+                        println("文件复制成功：$targetName")
                         movedFiles.add(targetName)
                         return@forEach
+                    } else {
+                        println("源文件不存在或不是普通文件：$sourcePath")
                     }
                 }
                 
                 // 如果没有源目录或源文件不存在，只返回目标文件名（文件已上传）
+                println("未执行文件移动，仅记录文件名：$targetName")
                 movedFiles.add(targetName)
             }
 
