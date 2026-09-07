@@ -1,6 +1,7 @@
 package com.atashi.vide.storage.service
 
 import org.springframework.stereotype.Service
+import org.springframework.web.multipart.MultipartFile
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -81,11 +82,11 @@ class VideoFileStorageService {
                 // 如果提供了源目录，尝试移动文件
                 if (!actualSourceDir.isNullOrBlank()) {
                     val sourcePath = Paths.get(actualSourceDir).resolve(fileName).toAbsolutePath().normalize()
-                    println("尝试从源目录复制文件：$sourcePath")
+                    println("尝试从源目录移动文件：$sourcePath")
                     println("目标路径：$targetPath")
                     if (Files.exists(sourcePath) && Files.isRegularFile(sourcePath)) {
-                        Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING)
-                        println("文件复制成功：$targetName")
+                        Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING)
+                        println("文件移动成功：$targetName")
                         movedFiles.add(targetName)
                         return@forEach
                     } else {
@@ -93,12 +94,31 @@ class VideoFileStorageService {
                     }
                 }
                 
-                // 如果没有源目录或源文件不存在，只返回目标文件名（文件已上传）
-                println("未执行文件移动，仅记录文件名：$targetName")
-                movedFiles.add(targetName)
+                throw IllegalArgumentException("源文件不存在或源目录未指定：$fileName")
             }
 
         return movedFiles
+    }
+
+    fun storeUploadedFile(
+        rootDirectory: String,
+        vType: String,
+        file: MultipartFile,
+        vName: String? = null,
+        vAuthor: String? = null,
+        vSeries: String? = null,
+        vSeason: String? = null,
+        vNumber: String? = null
+    ): Pair<String, Path> {
+        if (file.isEmpty) throw IllegalArgumentException("上传文件不能为空")
+        val resolvedName = normalizeCustomName(vName)
+        validateNameOverride(resolvedName, vSeries, vSeason, vNumber)
+        val targetDirectory = buildTypeDirectory(rootDirectory, vType, vAuthor, vSeries, vSeason)
+        Files.createDirectories(targetDirectory)
+        val targetName = buildTargetFileName(file.originalFilename ?: "video", resolvedName, vSeries, vSeason, vNumber)
+        val targetPath = targetDirectory.resolve(targetName).normalize()
+        file.inputStream.use { input -> Files.copy(input, targetPath, StandardCopyOption.REPLACE_EXISTING) }
+        return targetName to targetPath
     }
 
     private fun buildTargetFileName(

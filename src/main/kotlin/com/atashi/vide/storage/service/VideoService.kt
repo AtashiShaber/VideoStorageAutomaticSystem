@@ -6,6 +6,7 @@ import com.atashi.vide.storage.dto.VideoBatchResponse
 import com.atashi.vide.storage.entity.Video
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.multipart.MultipartFile
 import java.awt.Desktop
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -77,6 +78,38 @@ class VideoService(
         )
     }
 
+    @Transactional
+    fun classifyUploadedAndSave(
+        rootDirectory: String,
+        vType: String,
+        file: MultipartFile,
+        vName: String?,
+        vRank: String?,
+        vAuthor: String?,
+        vTag: String?,
+        vSeries: String?,
+        vSeason: String?,
+        vNumber: String?
+    ): VideoBatchResponse {
+        val safeRoot = rootDirectory.trim().ifEmpty { throw IllegalArgumentException("rootDirectory cannot be empty") }
+        val safeType = vType.trim().ifEmpty { throw IllegalArgumentException("vType cannot be empty") }
+        val (targetName, targetPath) = videoFileStorageService.storeUploadedFile(
+            safeRoot, safeType, file, vName, vAuthor, vSeries, vSeason, vNumber
+        )
+        videoMapper.insert(Video(
+            vName = vName?.trim()?.takeIf { it.isNotEmpty() } ?: targetName,
+            vType = safeType,
+            vRank = vRank,
+            vAuthor = vAuthor,
+            vTag = vTag,
+            vSeries = vSeries,
+            vSeason = vSeason,
+            vNumber = vNumber,
+            vFile = targetPath.toString()
+        ))
+        return VideoBatchResponse(safeRoot, safeType, targetPath.parent.toString(), listOf(targetName), listOf(targetName))
+    }
+
     private fun validateNameOverride(vName: String?, vSeries: String?, vSeason: String?, vNumber: String?) {
         val hasSeriesAssignment = !vSeries.isNullOrBlank() || !vSeason.isNullOrBlank() || !vNumber.isNullOrBlank()
         if (!vName.isNullOrBlank() && hasSeriesAssignment) {
@@ -112,7 +145,11 @@ class VideoService(
         )
     }
 
-    fun findAll(): List<Video> = videoMapper.selectAll()
+    fun findAll(excludeRank: String? = null): List<Video> = if (excludeRank.isNullOrBlank()) {
+        videoMapper.selectAll()
+    } else {
+        videoMapper.searchByCondition(null, null, null, null, null, null, null, null, null, null, excludeRank)
+    }
 
     fun findById(id: Long): Video? = videoMapper.selectById(id)
 

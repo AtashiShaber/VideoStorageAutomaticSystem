@@ -103,7 +103,8 @@ class VideoFileStorageServiceTest {
                 series: String?,
                 season: String?,
                 number: String?,
-                file: String?
+                file: String?,
+                excludeRank: String?
             ): List<Video> {
                 lastAuthor = author
                 lastTag = tag

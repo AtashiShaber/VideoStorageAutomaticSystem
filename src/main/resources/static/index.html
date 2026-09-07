@@ -759,7 +759,10 @@
     </div>
     <script>
       const $ = (id) => document.getElementById(id);
-      const state = { files: [], sourceDirectory: null };
+      const state = {
+        files: [],
+        sourceDirectory: localStorage.getItem("videoSourceDirectory") || null,
+      };
       const storedRoot = localStorage.getItem("videoRootDirectory") || "";
       const storedApi =
         localStorage.getItem("videoApiBase") || "http://localhost:8080";
@@ -802,6 +805,23 @@
           } else {
             alert("无法打开目录选择器，请手动输入路径。\n\n如果后端部署在服务器上，这是正常现象，请直接输入路径即可。");
           }
+        }
+      }
+
+      async function openDirectory(path) {
+        try {
+          const response = await fetch(
+            `${apiUrl("/videos/open-directory")}?path=${encodeURIComponent(path)}`,
+            { method: "POST" },
+          );
+          if (response.status === 501) {
+            alert("后端服务运行在无图形界面的环境中，请直接使用文件选择器或手动输入路径。");
+          } else if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || `HTTP ${response.status}`);
+          }
+        } catch (error) {
+          alert(`无法打开目录：${error.message}`);
         }
       }
 
@@ -1008,12 +1028,17 @@
         $("submitState").textContent = `正在处理 ${indexes.length} 个文件…`;
         try {
           for (const index of indexes) {
-            const endpoint =
-              mode === "batch" ? "/videos/batch" : "/videos/classify";
-            const response = await fetch(apiUrl(endpoint), {
+            const formData = new FormData();
+            formData.append("file", state.files[index], state.files[index].name);
+            formData.append("mode", mode);
+            Object.entries(data).forEach(([key, value]) => {
+              if (value !== null && value !== undefined && key !== "selectedFiles") {
+                formData.append(key, String(value));
+              }
+            });
+            const response = await fetch(apiUrl("/videos/upload"), {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(commonData(index, mode)),
+              body: formData,
             });
             if (!response.ok)
               throw new Error(
@@ -1060,10 +1085,12 @@
         try {
           const keyword = $("manageSearch").value.trim();
           const rating = getSelectedRating();
-          const excludeParam = rating === "safe" ? "&excludeRank=18+" : "";
+          const excludeParam = rating === "safe" ? `&excludeRank=${encodeURIComponent("18+")}` : "";
           const path = keyword
             ? `/videos/search?keyword=${encodeURIComponent(keyword)}${excludeParam}`
-            : `/videos?excludeRank=${rating === "safe" ? "18+" : ""}`;
+            : rating === "safe"
+              ? `/videos?excludeRank=${encodeURIComponent("18+")}`
+              : "/videos";
           const response = await fetch(apiUrl(path));
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           managedVideos = await response.json();
@@ -1087,9 +1114,9 @@
         const list = managedVideos.filter((video) => {
           // 跳过没有有效数据的记录（如只有路径的空记录）
           if (!video.vName || video.vName.trim() === "") return false;
-          // 全年龄模式下，后端已经过滤了 18+ 内容，这里只做二次确认
-          // 全部内容模式下显示所有数据
-          return true;
+          if (showAll) return true;
+          const rank = String(video.vRank || "").trim().toLowerCase();
+          return rank !== "18+" && rank !== "r18";
         });
         if (list.length === 0) {
           $("manageRows").innerHTML =
@@ -1181,13 +1208,21 @@
       $("folderBtn").onclick = () => {
         const sourceDir = $("sourceDirectory").value.trim();
         if (sourceDir) {
-          // 已指定路径，尝试打开该文件夹（需要后端支持）
-          chooseDirectory("sourceDirectory");
+          openDirectory(sourceDir);
         } else {
           // 未指定路径，打开文件选择器让用户选择文件
           $("filePicker").click();
         }
       };
+      $("sourceDirectory").addEventListener("input", (event) => {
+        state.sourceDirectory = event.target.value.trim() || null;
+        if (state.sourceDirectory) {
+          localStorage.setItem("videoSourceDirectory", state.sourceDirectory);
+        } else {
+          localStorage.removeItem("videoSourceDirectory");
+        }
+      });
+      if (state.sourceDirectory) $("sourceDirectory").value = state.sourceDirectory;
       $("sourceFolderBtn").onclick = () => chooseDirectory("sourceDirectory");
       $("chooseSourceDirBtn").onclick = () => chooseDirectory("sourceDirectory");
       $("filePicker").onchange = (event) => setFiles(event.target.files);

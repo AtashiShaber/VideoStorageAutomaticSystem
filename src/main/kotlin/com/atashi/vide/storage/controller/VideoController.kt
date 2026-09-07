@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.RequestPart
+import org.springframework.web.multipart.MultipartFile
 import java.awt.GraphicsEnvironment
 import javax.swing.JFileChooser
 
@@ -61,6 +63,31 @@ class VideoController(
     fun batchCreateAndClassify(@RequestBody request: VideoBatchRequest): VideoBatchResponse {
         println("收到批量处理请求：$request")
         return videoService.classifyAndSave(request)
+    }
+
+    @PostMapping("/upload", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    fun uploadAndClassify(
+        @RequestPart("file") file: MultipartFile,
+        @RequestParam rootDirectory: String,
+        @RequestParam vType: String,
+        @RequestParam(required = false) vName: String?,
+        @RequestParam(required = false) vRank: String?,
+        @RequestParam(required = false) vAuthor: String?,
+        @RequestParam(required = false) vTag: String?,
+        @RequestParam(required = false) vSeries: String?,
+        @RequestParam(required = false) vSeason: String?,
+        @RequestParam(required = false) vNumber: String?,
+        @RequestParam(defaultValue = "batch") mode: String
+    ): VideoBatchResponse {
+        if (mode == "classify") {
+            val (targetName, targetPath) = videoFileStorageService.storeUploadedFile(
+                rootDirectory, vType, file, vName, vAuthor, vSeries, vSeason, vNumber
+            )
+            return VideoBatchResponse(rootDirectory, vType, targetPath.parent.toString(), emptyList(), listOf(targetName))
+        }
+        return videoService.classifyUploadedAndSave(
+            rootDirectory, vType, file, vName, vRank, vAuthor, vTag, vSeries, vSeason, vNumber
+        )
     }
 
     @GetMapping("/search")
@@ -113,8 +140,26 @@ class VideoController(
         }
     }
 
+    @PostMapping("/open-directory")
+    fun openDirectory(@RequestParam path: String): ResponseEntity<Map<String, String>> {
+        if (GraphicsEnvironment.isHeadless()) {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(mapOf("error" to "当前运行环境没有图形界面"))
+        }
+        val directory = java.io.File(path.trim())
+        if (!directory.isDirectory) {
+            return ResponseEntity.badRequest().body(mapOf("error" to "目录不存在：${directory.path}"))
+        }
+        return try {
+            java.awt.Desktop.getDesktop().open(directory)
+            ResponseEntity.noContent().build()
+        } catch (error: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapOf("error" to (error.message ?: "无法打开目录")))
+        }
+    }
+
     @GetMapping
-    fun findAll(): ResponseEntity<List<Video>> = ResponseEntity.ok(videoService.findAll())
+    fun findAll(@RequestParam(required = false) excludeRank: String?): ResponseEntity<List<Video>> =
+        ResponseEntity.ok(videoService.findAll(excludeRank))
 
     @GetMapping("/{id}")
     fun findById(@PathVariable id: Long): ResponseEntity<Video> =

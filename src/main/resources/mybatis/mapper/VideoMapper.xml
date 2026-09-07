@@ -101,7 +101,13 @@
                 AND LOWER(v_file) LIKE LOWER(CONCAT('%', #{file}, '%'))
             </if>
             <if test="excludeRank != null and excludeRank != ''">
-                AND (v_rank IS NULL OR v_rank = '' OR LOWER(v_rank) != LOWER(#{excludeRank}))
+                AND (
+                    v_rank IS NULL OR TRIM(v_rank) = ''
+                    OR NOT (
+                        LOWER(TRIM(#{excludeRank})) IN ('18+', 'r18')
+                        AND LOWER(TRIM(v_rank)) IN ('18+', 'r18')
+                    )
+                )
             </if>
         </where>
         ORDER BY id DESC
