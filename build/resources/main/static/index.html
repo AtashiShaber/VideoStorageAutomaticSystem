@@ -346,6 +346,27 @@
           monospace;
         overflow-wrap: anywhere;
       }
+      .source-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 13px;
+        padding: 11px 13px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #f7faf8;
+      }
+      .source-summary strong {
+        display: block;
+        color: var(--teal-dark);
+      }
+      .source-summary .hint {
+        margin: 2px 0 0;
+      }
+      .storage-panel input[type="text"] {
+        margin-bottom: 8px;
+      }
       .searchbar {
         display: flex;
         gap: 9px;
@@ -488,6 +509,10 @@
         .filter-radios {
           grid-column: 1/-1;
         }
+        .source-summary {
+          align-items: flex-start;
+          flex-direction: column;
+        }
       }
     </style>
   </head>
@@ -516,7 +541,7 @@
           <div class="drop" id="dropZone">
             <div>
               <strong>点击选择，或拖入视频文件</strong
-              ><span>会打开 Windows 资源管理器，可多选文件或选择文件夹</span>
+              ><span>可多选文件；浏览器通常会记住上次打开的位置</span>
             </div>
             <input
               id="filePicker"
@@ -526,25 +551,12 @@
               hidden />
             <p class="hint">还没有选择文件。</p>
           </div>
-          <div class="actions">
-            <button class="secondary" id="folderBtn" type="button">从资源管理器选择文件夹</button
-            ><button class="secondary" id="sourceFolderBtn" type="button">指定源文件夹路径</button
-            ><input
-              id="sourceDirectory"
-              type="text"
-              placeholder="源文件夹路径（可选）"
-              style="width: 200px; margin-left: 10px;"
-            /><button
-              class="secondary"
-              id="chooseSourceDirBtn"
-              type="button"
-              style="margin-left: 5px;"
-            >
-              选择
-            </button
-            ><span class="hint"
-              >选择源文件夹后，后端会将文件从该目录移动到归档目录。如果无法弹出选择器，请直接在上方输入框手动输入路径。</span
-            >
+          <div class="source-summary">
+            <div>
+              <strong>源文件</strong>
+              <p class="hint">选中的文件会上传并移动到右侧目标目录，不需要再选择源文件夹。</p>
+            </div>
+            <button class="secondary" id="chooseFilesBtn" type="button">选择文件</button>
           </div>
         </section>
         <aside class="panel storage-panel">
@@ -560,9 +572,9 @@
               type="button"
               onclick="chooseDirectory('rootDirectory')"
             >
-              从资源管理器选择
+              选择目标文件夹
             </button>
-            <p class="hint">路径保存在浏览器 localStorage。</p>
+            <p class="hint">目标路径保存在浏览器 localStorage；无法弹出管理器时请直接输入完整路径。</p>
           </div>
           <div class="path-preview">
             <strong>归档路径预览</strong
@@ -719,7 +731,7 @@
           </button>
         </div>
         <p class="subtitle">
-          即使后端尚未启动，也可以先选择文件、填写信息和保存草稿。
+          即使后端尚未启动，也可以先选择文件、填写信息和保存草稿。源文件通过浏览器选择器上传，目标目录填写在归档页。
         </p>
         <div class="field">
           <label for="modalApi">后端 API 地址</label
@@ -735,17 +747,8 @@
         </div>
         <div class="field" style="margin-top: 14px">
           <label for="modalRoot">Video 存储根目录</label
-          ><input
-            id="modalRoot"
-            type="text"
-            placeholder="例如 D:\Videos"
-          /><button
-            class="secondary"
-            type="button"
-            onclick="chooseDirectory('modalRoot')"
-          >
-            从资源管理器选择
-          </button>
+          ><input id="modalRoot" type="text" placeholder="例如 D:\Videos" />
+          <p class="hint">部署在无桌面环境时不能弹出本地管理器，请直接填写目标路径。</p>
         </div>
         <div class="actions">
           <button class="primary" id="modalSave" type="button">
@@ -759,7 +762,9 @@
     </div>
     <script>
       const $ = (id) => document.getElementById(id);
-      const state = { files: [], sourceDirectory: null };
+      const state = {
+        files: [],
+      };
       const storedRoot = localStorage.getItem("videoRootDirectory") || "";
       const storedApi =
         localStorage.getItem("videoApiBase") || "http://localhost:8080";
@@ -788,10 +793,6 @@
             if (inputId === "rootDirectory" || inputId === "modalRoot") {
               savePaths(data.path);
               updatePathPreview();
-            } else if (inputId === "sourceDirectory") {
-              // 保存源目录路径，用于文件移动操作
-              state.sourceDirectory = data.path;
-              localStorage.setItem("videoSourceDirectory", data.path);
             }
           }
         } catch (error) {
@@ -823,7 +824,6 @@
         $("modalApi").value =
           localStorage.getItem("videoApiBase") || "http://localhost:8080";
         $("modalRoot").value = $("rootDirectory").value;
-        // modalCurrent 已移除，不再使用
         $("modalError").textContent = "";
         $("settingsModal").hidden = false;
       }
@@ -949,7 +949,6 @@
         const item = getPerFile(index);
         const data = {
           rootDirectory: formValue("rootDirectory"),
-          currentDirectory: state.sourceDirectory || null, // 当前目录（源文件夹）用于文件移动
           vName: item.name || null,
           vType: formValue("vType"),
           vRank: formValue("vRank"),
@@ -959,7 +958,6 @@
           vSeason: formValue("vSeason") || null,
           vNumber: item.number || null,
           selectedFiles: [state.files[index].name],
-          sourceDirectory: state.sourceDirectory || null, // 源目录用于文件移动
         };
         if (mode === "classify") delete data.vRank;
         return data;
@@ -1008,12 +1006,17 @@
         $("submitState").textContent = `正在处理 ${indexes.length} 个文件…`;
         try {
           for (const index of indexes) {
-            const endpoint =
-              mode === "batch" ? "/videos/batch" : "/videos/classify";
-            const response = await fetch(apiUrl(endpoint), {
+            const formData = new FormData();
+            formData.append("file", state.files[index], state.files[index].name);
+            formData.append("mode", mode);
+            Object.entries(data).forEach(([key, value]) => {
+              if (value !== null && value !== undefined && key !== "selectedFiles") {
+                formData.append(key, String(value));
+              }
+            });
+            const response = await fetch(apiUrl("/videos/upload"), {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(commonData(index, mode)),
+              body: formData,
             });
             if (!response.ok)
               throw new Error(
@@ -1060,10 +1063,12 @@
         try {
           const keyword = $("manageSearch").value.trim();
           const rating = getSelectedRating();
-          const excludeParam = rating === "safe" ? "&excludeRank=18+" : "";
+          const excludeParam = rating === "safe" ? `&excludeRank=${encodeURIComponent("18+")}` : "";
           const path = keyword
             ? `/videos/search?keyword=${encodeURIComponent(keyword)}${excludeParam}`
-            : `/videos?excludeRank=${rating === "safe" ? "18+" : ""}`;
+            : rating === "safe"
+              ? `/videos?excludeRank=${encodeURIComponent("18+")}`
+              : "/videos";
           const response = await fetch(apiUrl(path));
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           managedVideos = await response.json();
@@ -1087,9 +1092,9 @@
         const list = managedVideos.filter((video) => {
           // 跳过没有有效数据的记录（如只有路径的空记录）
           if (!video.vName || video.vName.trim() === "") return false;
-          // 全年龄模式下，后端已经过滤了 18+ 内容，这里只做二次确认
-          // 全部内容模式下显示所有数据
-          return true;
+          if (showAll) return true;
+          const rank = String(video.vRank || "").trim().toLowerCase();
+          return rank !== "18+" && rank !== "r18";
         });
         if (list.length === 0) {
           $("manageRows").innerHTML =
@@ -1177,9 +1182,7 @@
       );
       updatePathPreview();
       $("dropZone").onclick = () => $("filePicker").click();
-      $("folderBtn").onclick = () => $("filePicker").click();
-      $("sourceFolderBtn").onclick = () => chooseDirectory("sourceDirectory");
-      $("chooseSourceDirBtn").onclick = () => chooseDirectory("sourceDirectory");
+      $("chooseFilesBtn").onclick = () => $("filePicker").click();
       $("filePicker").onchange = (event) => setFiles(event.target.files);
       $("dropZone").ondragover = (event) => {
         event.preventDefault();
