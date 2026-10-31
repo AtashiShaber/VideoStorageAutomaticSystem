@@ -346,6 +346,27 @@
           monospace;
         overflow-wrap: anywhere;
       }
+      .source-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 13px;
+        padding: 11px 13px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #f7faf8;
+      }
+      .source-summary strong {
+        display: block;
+        color: var(--teal-dark);
+      }
+      .source-summary .hint {
+        margin: 2px 0 0;
+      }
+      .storage-panel input[type="text"] {
+        margin-bottom: 8px;
+      }
       .searchbar {
         display: flex;
         gap: 9px;
@@ -488,6 +509,10 @@
         .filter-radios {
           grid-column: 1/-1;
         }
+        .source-summary {
+          align-items: flex-start;
+          flex-direction: column;
+        }
       }
     </style>
   </head>
@@ -516,7 +541,7 @@
           <div class="drop" id="dropZone">
             <div>
               <strong>点击选择，或拖入视频文件</strong
-              ><span>会打开 Windows 资源管理器，可多选文件或选择文件夹</span>
+              ><span>可多选文件；浏览器通常会记住上次打开的位置</span>
             </div>
             <input
               id="filePicker"
@@ -526,25 +551,12 @@
               hidden />
             <p class="hint">还没有选择文件。</p>
           </div>
-          <div class="actions">
-            <button class="secondary" id="folderBtn" type="button">路径</button
-            ><button class="secondary" id="sourceFolderBtn" type="button">指定源文件夹路径</button
-            ><input
-              id="sourceDirectory"
-              type="text"
-              placeholder="源文件夹路径（可选）"
-              style="width: 200px; margin-left: 10px;"
-            /><button
-              class="secondary"
-              id="chooseSourceDirBtn"
-              type="button"
-              style="margin-left: 5px;"
-            >
-              选择
-            </button
-            ><span class="hint"
-              >点击"路径"按钮：如果已指定路径则打开该文件夹，否则打开文件选择器。选择源文件夹后，后端会将文件从该目录移动到归档目录。</span
-            >
+          <div class="source-summary">
+            <div>
+              <strong>源文件</strong>
+              <p class="hint">选中的文件会上传并移动到右侧目标目录，不需要再选择源文件夹。</p>
+            </div>
+            <button class="secondary" id="chooseFilesBtn" type="button">选择文件</button>
           </div>
         </section>
         <aside class="panel storage-panel">
@@ -560,9 +572,9 @@
               type="button"
               onclick="chooseDirectory('rootDirectory')"
             >
-              从资源管理器选择
+              选择目标文件夹
             </button>
-            <p class="hint">路径保存在浏览器 localStorage。</p>
+            <p class="hint">目标路径保存在浏览器 localStorage；无法弹出管理器时请直接输入完整路径。</p>
           </div>
           <div class="path-preview">
             <strong>归档路径预览</strong
@@ -719,7 +731,7 @@
           </button>
         </div>
         <p class="subtitle">
-          即使后端尚未启动，也可以先选择文件、填写信息和保存草稿。
+          即使后端尚未启动，也可以先选择文件、填写信息和保存草稿。源文件通过浏览器选择器上传，目标目录填写在归档页。
         </p>
         <div class="field">
           <label for="modalApi">后端 API 地址</label
@@ -735,17 +747,8 @@
         </div>
         <div class="field" style="margin-top: 14px">
           <label for="modalRoot">Video 存储根目录</label
-          ><input
-            id="modalRoot"
-            type="text"
-            placeholder="例如 D:\Videos"
-          /><button
-            class="secondary"
-            type="button"
-            onclick="chooseDirectory('modalRoot')"
-          >
-            从资源管理器选择
-          </button>
+          ><input id="modalRoot" type="text" placeholder="例如 D:\Videos" />
+          <p class="hint">部署在无桌面环境时不能弹出本地管理器，请直接填写目标路径。</p>
         </div>
         <div class="actions">
           <button class="primary" id="modalSave" type="button">
@@ -761,7 +764,6 @@
       const $ = (id) => document.getElementById(id);
       const state = {
         files: [],
-        sourceDirectory: localStorage.getItem("videoSourceDirectory") || null,
       };
       const storedRoot = localStorage.getItem("videoRootDirectory") || "";
       const storedApi =
@@ -791,10 +793,6 @@
             if (inputId === "rootDirectory" || inputId === "modalRoot") {
               savePaths(data.path);
               updatePathPreview();
-            } else if (inputId === "sourceDirectory") {
-              // 保存源目录路径，用于文件移动操作
-              state.sourceDirectory = data.path;
-              localStorage.setItem("videoSourceDirectory", data.path);
             }
           }
         } catch (error) {
@@ -805,23 +803,6 @@
           } else {
             alert("无法打开目录选择器，请手动输入路径。\n\n如果后端部署在服务器上，这是正常现象，请直接输入路径即可。");
           }
-        }
-      }
-
-      async function openDirectory(path) {
-        try {
-          const response = await fetch(
-            `${apiUrl("/videos/open-directory")}?path=${encodeURIComponent(path)}`,
-            { method: "POST" },
-          );
-          if (response.status === 501) {
-            alert("后端服务运行在无图形界面的环境中，请直接使用文件选择器或手动输入路径。");
-          } else if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
-            throw new Error(data.error || `HTTP ${response.status}`);
-          }
-        } catch (error) {
-          alert(`无法打开目录：${error.message}`);
         }
       }
 
@@ -843,7 +824,6 @@
         $("modalApi").value =
           localStorage.getItem("videoApiBase") || "http://localhost:8080";
         $("modalRoot").value = $("rootDirectory").value;
-        // modalCurrent 已移除，不再使用
         $("modalError").textContent = "";
         $("settingsModal").hidden = false;
       }
@@ -969,7 +949,6 @@
         const item = getPerFile(index);
         const data = {
           rootDirectory: formValue("rootDirectory"),
-          currentDirectory: state.sourceDirectory || null, // 当前目录（源文件夹）用于文件移动
           vName: item.name || null,
           vType: formValue("vType"),
           vRank: formValue("vRank"),
@@ -979,7 +958,6 @@
           vSeason: formValue("vSeason") || null,
           vNumber: item.number || null,
           selectedFiles: [state.files[index].name],
-          sourceDirectory: state.sourceDirectory || null, // 源目录用于文件移动
         };
         if (mode === "classify") delete data.vRank;
         return data;
@@ -1204,27 +1182,7 @@
       );
       updatePathPreview();
       $("dropZone").onclick = () => $("filePicker").click();
-      // folderBtn 按钮逻辑：如果已指定路径则打开该文件夹，否则打开文件选择器
-      $("folderBtn").onclick = () => {
-        const sourceDir = $("sourceDirectory").value.trim();
-        if (sourceDir) {
-          openDirectory(sourceDir);
-        } else {
-          // 未指定路径，打开文件选择器让用户选择文件
-          $("filePicker").click();
-        }
-      };
-      $("sourceDirectory").addEventListener("input", (event) => {
-        state.sourceDirectory = event.target.value.trim() || null;
-        if (state.sourceDirectory) {
-          localStorage.setItem("videoSourceDirectory", state.sourceDirectory);
-        } else {
-          localStorage.removeItem("videoSourceDirectory");
-        }
-      });
-      if (state.sourceDirectory) $("sourceDirectory").value = state.sourceDirectory;
-      $("sourceFolderBtn").onclick = () => chooseDirectory("sourceDirectory");
-      $("chooseSourceDirBtn").onclick = () => chooseDirectory("sourceDirectory");
+      $("chooseFilesBtn").onclick = () => $("filePicker").click();
       $("filePicker").onchange = (event) => setFiles(event.target.files);
       $("dropZone").ondragover = (event) => {
         event.preventDefault();
