@@ -3,8 +3,10 @@ CREATE TABLE IF NOT EXISTS video (
     v_name VARCHAR(255) NOT NULL,
     v_type VARCHAR(50) NOT NULL,
     v_rank VARCHAR(20) NOT NULL DEFAULT '',
+    v_subtype VARCHAR(50),
     v_author VARCHAR(255),
     v_tag TEXT,
+    region VARCHAR(100),
     v_series VARCHAR(255),
     v_season VARCHAR(50),
     v_number VARCHAR(50),
@@ -19,3 +21,9 @@ ALTER TABLE video
 
 ALTER TABLE video
     ADD COLUMN IF NOT EXISTS v_number VARCHAR(50);
+
+ALTER TABLE video
+    ADD COLUMN IF NOT EXISTS v_subtype VARCHAR(50);
+
+ALTER TABLE video
+    ADD COLUMN IF NOT EXISTS region VARCHAR(100);

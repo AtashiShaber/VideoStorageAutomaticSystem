@@ -37,11 +37,13 @@ class VideoController(
     @PostMapping("/classify")
     fun classifyFiles(@RequestBody request: VideoClassifyRequest): VideoClassifyResponse {
         println("收到分类请求：$request")
-        val typeDirectory = videoFileStorageService.buildTypeDirectory(request.rootDirectory, request.vType)
+        val typeDirectory = videoFileStorageService.buildTypeDirectory(request.rootDirectory, request.vType, request.vRank, request.vSubtype)
         val movedFiles = videoFileStorageService.classifyFiles(
             rootDirectory = request.rootDirectory,
             currentDirectory = request.currentDirectory,
             vType = request.vType,
+            vRank = request.vRank,
+            vSubtype = request.vSubtype,
             selectedFiles = request.selectedFiles,
             vName = request.vName,
             vAuthor = request.vAuthor,
@@ -71,9 +73,11 @@ class VideoController(
         @RequestParam rootDirectory: String,
         @RequestParam vType: String,
         @RequestParam(required = false) vName: String?,
-        @RequestParam(required = false) vRank: String?,
+        @RequestParam(defaultValue = "ALL") vRank: String,
+        @RequestParam(required = false) vSubtype: String?,
         @RequestParam(required = false) vAuthor: String?,
         @RequestParam(required = false) vTag: String?,
+        @RequestParam(required = false) region: String?,
         @RequestParam(required = false) vSeries: String?,
         @RequestParam(required = false) vSeason: String?,
         @RequestParam(required = false) vNumber: String?,
@@ -81,12 +85,12 @@ class VideoController(
     ): VideoBatchResponse {
         if (mode == "classify") {
             val (targetName, targetPath) = videoFileStorageService.storeUploadedFile(
-                rootDirectory, vType, file, vName, vAuthor, vSeries, vSeason, vNumber
+                rootDirectory, vType, file, vName, vRank, vSubtype, vAuthor, vSeries, vSeason, vNumber
             )
             return VideoBatchResponse(rootDirectory, vType, targetPath.parent.toString(), emptyList(), listOf(targetName))
         }
         return videoService.classifyUploadedAndSave(
-            rootDirectory, vType, file, vName, vRank, vAuthor, vTag, vSeries, vSeason, vNumber
+            rootDirectory, vType, file, vName, vRank, vSubtype, vAuthor, vTag, region, vSeries, vSeason, vNumber
         )
     }
 
@@ -97,8 +101,10 @@ class VideoController(
         @RequestParam(name = "name", required = false) name: String?,
         @RequestParam(name = "type", required = false) type: String?,
         @RequestParam(name = "rank", required = false) rank: String?,
+        @RequestParam(name = "subtype", required = false) subtype: String?,
         @RequestParam(name = "author", required = false) author: String?,
         @RequestParam(name = "tag", required = false) tag: String?,
+        @RequestParam(name = "region", required = false) region: String?,
         @RequestParam(name = "series", required = false) series: String?,
         @RequestParam(name = "season", required = false) season: String?,
         @RequestParam(name = "number", required = false) number: String?,
@@ -111,8 +117,10 @@ class VideoController(
             name = name,
             type = type,
             rank = rank,
+            subtype = subtype,
             author = author,
             tag = tag,
+            region = region,
             series = series,
             season = season,
             number = number,

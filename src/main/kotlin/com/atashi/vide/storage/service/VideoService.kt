@@ -21,12 +21,15 @@ class VideoService(
     fun classifyAndSave(request: VideoBatchRequest): VideoBatchResponse {
         val rootDirectory = request.rootDirectory.trim().ifEmpty { throw IllegalArgumentException("rootDirectory cannot be empty") }
         val safeType = request.vType.trim().ifEmpty { throw IllegalArgumentException("vType cannot be empty") }
+        val safeRank = normalizeRank(request.vRank)
         val resolvedName = request.vName?.trim()
         validateNameOverride(resolvedName, request.vSeries, request.vSeason, request.vNumber)
 
         val typeDirectory = videoFileStorageService.buildTypeDirectory(
             rootDirectory = rootDirectory,
             vType = safeType,
+            vRank = safeRank,
+            vSubtype = request.vSubtype,
             vAuthor = request.vAuthor,
             vSeries = request.vSeries,
             vSeason = request.vSeason
@@ -35,6 +38,8 @@ class VideoService(
             rootDirectory = request.rootDirectory,
             currentDirectory = request.currentDirectory,
             vType = request.vType,
+            vRank = safeRank,
+            vSubtype = request.vSubtype,
             selectedFiles = request.selectedFiles,
             vName = resolvedName,
             vAuthor = request.vAuthor,
@@ -56,9 +61,11 @@ class VideoService(
                 val saved = Video(
                     vName = resolvedName ?: targetFileName,
                     vType = safeType,
-                    vRank = request.vRank,
+                    vRank = safeRank,
+                    vSubtype = request.vSubtype,
                     vAuthor = request.vAuthor,
                     vTag = request.vTag,
+                    region = request.region,
                     vSeries = request.vSeries,
                     vSeason = request.vSeason,
                     vNumber = request.vNumber,
@@ -84,9 +91,11 @@ class VideoService(
         vType: String,
         file: MultipartFile,
         vName: String?,
-        vRank: String?,
+        vRank: String,
+        vSubtype: String?,
         vAuthor: String?,
         vTag: String?,
+        region: String?,
         vSeries: String?,
         vSeason: String?,
         vNumber: String?
@@ -94,14 +103,16 @@ class VideoService(
         val safeRoot = rootDirectory.trim().ifEmpty { throw IllegalArgumentException("rootDirectory cannot be empty") }
         val safeType = vType.trim().ifEmpty { throw IllegalArgumentException("vType cannot be empty") }
         val (targetName, targetPath) = videoFileStorageService.storeUploadedFile(
-            safeRoot, safeType, file, vName, vAuthor, vSeries, vSeason, vNumber
+            safeRoot, safeType, file, vName, vRank, vSubtype, vAuthor, vSeries, vSeason, vNumber
         )
         videoMapper.insert(Video(
             vName = vName?.trim()?.takeIf { it.isNotEmpty() } ?: targetName,
             vType = safeType,
-            vRank = vRank,
+            vRank = normalizeRank(vRank),
+            vSubtype = vSubtype,
             vAuthor = vAuthor,
             vTag = vTag,
+            region = region,
             vSeries = vSeries,
             vSeason = vSeason,
             vNumber = vNumber,
@@ -122,8 +133,10 @@ class VideoService(
         name: String? = null,
         type: String? = null,
         rank: String? = null,
+        subtype: String? = null,
         author: String? = null,
         tag: String? = null,
+        region: String? = null,
         series: String? = null,
         season: String? = null,
         number: String? = null,
@@ -135,8 +148,10 @@ class VideoService(
             name = name,
             type = type,
             rank = rank,
+            subtype = subtype,
             author = author,
             tag = tag,
+            region = region,
             series = series,
             season = season,
             number = number,
@@ -148,7 +163,7 @@ class VideoService(
     fun findAll(excludeRank: String? = null): List<Video> = if (excludeRank.isNullOrBlank()) {
         videoMapper.selectAll()
     } else {
-        videoMapper.searchByCondition(null, null, null, null, null, null, null, null, null, null, excludeRank)
+        videoMapper.searchByCondition(null, null, null, null, null, null, null, null, null, null, null, null, excludeRank)
     }
 
     fun findById(id: Long): Video? = videoMapper.selectById(id)
@@ -156,7 +171,7 @@ class VideoService(
     @Transactional
     fun update(id: Long, video: Video): Video? {
         val existing = videoMapper.selectById(id) ?: return null
-        val updated = video.copy(id = id, vFile = existing.vFile)
+        val updated = video.copy(id = id, vRank = normalizeRank(video.vRank), vFile = existing.vFile)
         videoMapper.update(updated)
         return updated
     }
@@ -185,4 +200,9 @@ class VideoService(
         video.vName = newName.trim()
         videoMapper.update(video)
     }
+
+    private fun normalizeRank(value: String?): String =
+        if (value?.trim()?.equals("R", ignoreCase = true) == true ||
+            value?.trim()?.equals("R18", ignoreCase = true) == true ||
+            value?.trim()?.equals("18+", ignoreCase = true) == true) "R" else "ALL"
 }
