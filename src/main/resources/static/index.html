@@ -140,7 +140,8 @@
       }
       input[type="text"],
       input[type="url"],
-      input[type="search"] {
+      input[type="search"],
+      select {
         width: 100%;
         border: 1px solid var(--line);
         border-radius: 5px;
@@ -414,6 +415,24 @@
         flex: 1;
         min-width: 180px;
       }
+      .tag-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        width: 100%;
+      }
+      .tag-filter {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 5px 10px;
+        background: #f7faf8;
+        color: var(--teal-dark);
+        font-size: 12px;
+      }
+      .tag-filter.active {
+        background: var(--teal);
+        color: white;
+      }
       .results {
         display: grid;
         gap: 8px;
@@ -594,11 +613,15 @@
           <div class="grid">
             <div class="field">
               <label for="vType">类型 <b>*</b></label
-              ><input id="vType" type="text" placeholder="Anime / Movie" />
+              ><select id="vType"><option value="">选择类型</option><option value="LiveAction">LiveAction</option><option value="Animation">Animation</option></select>
             </div>
             <div class="field">
               <label for="vRank">评级</label
-              ><input id="vRank" type="text" placeholder="例如 18+" />
+              ><select id="vRank"><option value="ALL">ALL（全年龄）</option><option value="R">R（成人）</option></select>
+            </div>
+            <div class="field">
+              <label for="vSubtype">动画细分</label
+              ><select id="vSubtype"><option value="">不适用</option><option value="3D">3D</option><option value="Animal">Animal（传统 2D）</option></select>
             </div>
             <div class="field">
               <label for="vAuthor">作者 / 制作团队</label
@@ -616,6 +639,10 @@
             <div class="field wide">
               <label for="vSeason">季</label
               ><input id="vSeason" type="text" placeholder="S1" />
+            </div>
+            <div class="field wide">
+              <label for="region">国家 / 地区</label
+              ><input id="region" type="text" placeholder="Japan / China / US" />
             </div>
           </div>
           <div class="actions">
@@ -672,12 +699,12 @@
         <div class="searchbar">
           <div class="filter-radios">
             <label
-              ><input type="radio" name="manageRating" value="safe" checked />
+              ><input type="radio" name="manageRating" value="ALL" checked />
               全年龄模式</label
             >
             <label
-              ><input type="radio" name="manageRating" value="all" />
-              全部内容</label
+              ><input type="radio" name="manageRating" value="R" />
+              成人内容</label
             >
           </div>
           <input
@@ -685,10 +712,13 @@
             type="search"
             placeholder="搜索名称、类型、作者、系列、标签"
           />
+          <select id="manageType"><option value="">全部类型</option><option value="LiveAction">LiveAction</option><option value="Animation">Animation</option></select>
+          <select id="manageRegion"><option value="">全部国家 / 地区</option></select>
           <button class="primary" id="manageRefresh" type="button">
             刷新列表
           </button>
         </div>
+        <div class="tag-filters" id="manageTags"></div>
         <p class="hint" id="manageStatus"></p>
         <div class="table-wrap">
           <table>
@@ -747,8 +777,14 @@
         </div>
         <div class="field" style="margin-top: 14px">
           <label for="modalRoot">Video 存储根目录</label
-          ><input id="modalRoot" type="text" placeholder="例如 D:\Videos" />
-          <p class="hint">部署在无桌面环境时不能弹出本地管理器，请直接填写目标路径。</p>
+          ><input id="modalRoot" type="text" placeholder="例如 D:\Videos" /><button
+            class="secondary"
+            type="button"
+            onclick="chooseDirectory('modalRoot')"
+          >
+            选择目标文件夹
+          </button>
+          <p class="hint">可直接输入本机绝对路径；选择按钮需要后端运行在有桌面的本机。</p>
         </div>
         <div class="actions">
           <button class="primary" id="modalSave" type="button">
@@ -765,12 +801,13 @@
       const state = {
         files: [],
       };
+      const defaultApi = "http://localhost:8080";
       const storedRoot = localStorage.getItem("videoRootDirectory") || "";
-      const storedApi =
-        localStorage.getItem("videoApiBase") || "http://localhost:8080";
+      const storedApi = localStorage.getItem("videoApiBase") || defaultApi;
       let backendOnline = false;
       $("rootDirectory").value = storedRoot;
-      if (!storedRoot || !localStorage.getItem("videoApiBase")) {
+      localStorage.setItem("videoApiBase", storedApi);
+      if (!storedRoot) {
         $("settingsModal").hidden = false;
       }
 
@@ -807,11 +844,16 @@
       }
 
       function savePaths(root = $("rootDirectory").value) {
-        $("rootDirectory").value = root.trim();
-        localStorage.setItem("videoRootDirectory", $("rootDirectory").value);
+        const normalizedRoot = root.trim();
+        $("rootDirectory").value = normalizedRoot;
+        $("modalRoot").value = normalizedRoot;
+        localStorage.setItem("videoRootDirectory", normalizedRoot);
+        updatePathPreview();
       }
       function saveApiBase(value) {
-        localStorage.setItem("videoApiBase", value.trim().replace(/\/$/, ""));
+        const normalized = value.trim().replace(/\/$/, "") || defaultApi;
+        localStorage.setItem("videoApiBase", normalized);
+        return normalized;
       }
       function closeSettings() {
         $("settingsModal").hidden = true;
@@ -835,10 +877,11 @@
 
       $("modalCancel").onclick = closeSettings;
       $("modalSave").onclick = () => {
-        saveApiBase($("modalApi").value || "http://localhost:8080");
+        saveApiBase($("modalApi").value);
         savePaths($("modalRoot").value);
         closeSettings();
-        showMessage("设置已保存；后端上线后即可归档。", true);
+        checkBackend();
+        showMessage("设置已保存；目标文件夹已更新。", true);
       };
 
       $("settingsBtn").onclick = openSettings;
@@ -922,7 +965,9 @@
       function updatePathPreview() {
         const parts = [
           formValue("rootDirectory"),
+          formValue("vRank"),
           formValue("vType"),
+          formValue("vSubtype"),
           formValue("vAuthor"),
           formValue("vSeries"),
           formValue("vSeason"),
@@ -952,8 +997,10 @@
           vName: item.name || null,
           vType: formValue("vType"),
           vRank: formValue("vRank"),
+          vSubtype: formValue("vSubtype") || null,
           vAuthor: formValue("vAuthor") || null,
           vTag: item.tag || formValue("vTag") || null,
+          region: formValue("region") || null,
           vSeries: formValue("vSeries") || null,
           vSeason: formValue("vSeason") || null,
           vNumber: item.number || null,
@@ -1038,6 +1085,7 @@
         return base.replace(/\/$/, "") + path;
       }
       async function checkBackend() {
+        $("apiStatus").textContent = "正在连接后端…";
         try {
           const response = await fetch(apiUrl("/videos"), {
             signal: AbortSignal.timeout(2500),
@@ -1049,10 +1097,34 @@
             : "后端未上线，可离线配置";
         } catch (_) {
           backendOnline = false;
-          $("apiStatus").textContent = "后端未上线，可离线配置";
+          $("apiDot").classList.remove("ready");
+          $("apiStatus").textContent = "后端未连接（默认 http://localhost:8080）";
         }
       }
       let managedVideos = [];
+      let activeManageTag = "";
+      function splitTags(value) {
+        return String(value || "")
+          .split(/[\s#]+/)
+          .map((tag) => tag.trim())
+          .filter(Boolean);
+      }
+      function updateManageFilters() {
+        const regions = [...new Set(managedVideos.map((video) => video.region).filter(Boolean))].sort();
+        $("manageRegion").innerHTML =
+          '<option value="">全部国家 / 地区</option>' +
+          regions.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("");
+        const tags = [...new Set(managedVideos.flatMap((video) => splitTags(video.vTag)))].sort();
+        $("manageTags").innerHTML = tags
+          .map((tag) => `<button type="button" class="tag-filter ${activeManageTag === tag ? "active" : ""}" data-tag="${escapeHtml(tag)}">#${escapeHtml(tag)}</button>`)
+          .join("");
+        $("manageTags").querySelectorAll("[data-tag]").forEach((button) => {
+          button.onclick = () => {
+            activeManageTag = activeManageTag === button.dataset.tag ? "" : button.dataset.tag;
+            loadManagedVideos();
+          };
+        });
+      }
       function showPage(page) {
         $("archivePage").hidden = page !== "archive";
         $("managePage").hidden = page !== "manage";
@@ -1063,15 +1135,20 @@
         try {
           const keyword = $("manageSearch").value.trim();
           const rating = getSelectedRating();
-          const excludeParam = rating === "safe" ? `&excludeRank=${encodeURIComponent("18+")}` : "";
-          const path = keyword
-            ? `/videos/search?keyword=${encodeURIComponent(keyword)}${excludeParam}`
-            : rating === "safe"
-              ? `/videos?excludeRank=${encodeURIComponent("18+")}`
-              : "/videos";
+          const type = $("manageType").value;
+          const region = $("manageRegion").value;
+          const tag = activeManageTag;
+          const params = new URLSearchParams();
+          if (keyword) params.set("keyword", keyword);
+          params.set("rank", rating);
+          if (type) params.set("type", type);
+          if (region) params.set("region", region);
+          if (tag) params.set("tag", tag);
+          const path = `/videos/search?${params.toString()}`;
           const response = await fetch(apiUrl(path));
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           managedVideos = await response.json();
+          updateManageFilters();
           renderManagedVideos();
           $("manageStatus").textContent =
             `已加载 ${managedVideos.length} 条记录`;
@@ -1084,17 +1161,18 @@
       function getSelectedRating() {
         return (
           document.querySelector('input[name="manageRating"]:checked')?.value ||
-          "safe"
+          "ALL"
         );
       }
       function renderManagedVideos() {
-        const showAll = getSelectedRating() === "all";
+        const selectedRank = getSelectedRating();
         const list = managedVideos.filter((video) => {
           // 跳过没有有效数据的记录（如只有路径的空记录）
           if (!video.vName || video.vName.trim() === "") return false;
-          if (showAll) return true;
           const rank = String(video.vRank || "").trim().toLowerCase();
-          return rank !== "18+" && rank !== "r18";
+          return selectedRank === "R"
+            ? rank === "r" || rank === "r18" || rank === "18+"
+            : rank === "all" || rank === "";
         });
         if (list.length === 0) {
           $("manageRows").innerHTML =
@@ -1104,7 +1182,7 @@
         $("manageRows").innerHTML = list
           .map(
             (video) =>
-              `<tr data-id="${video.id}"><td><strong>${escapeHtml(video.vName)}</strong><small>${escapeHtml(video.vNumber || "")}</small></td><td>${escapeHtml(video.vType)}<small>${escapeHtml(video.vSeason || "")}</small></td><td>${escapeHtml(video.vAuthor || "")}<small>${escapeHtml(video.vSeries || "")}</small></td><td>${escapeHtml(video.vTag || "")}</td><td>${escapeHtml(video.vRank || "")}</td><td><small>${escapeHtml(video.vFile || "")}</small></td><td><button class="secondary" data-manage="play">播放</button> <button class="secondary" data-manage="edit">编辑</button> <button class="secondary" data-manage="delete">删除</button></td></tr>`,
+              `<tr data-id="${video.id}"><td><strong>${escapeHtml(video.vName)}</strong><small>${escapeHtml(video.vNumber || "")}</small></td><td>${escapeHtml(video.vType)}<small>${escapeHtml(video.vSubtype || "")} ${escapeHtml(video.vSeason || "")}</small></td><td>${escapeHtml(video.vAuthor || "")}<small>${escapeHtml(video.vSeries || "")}</small></td><td>${splitTags(video.vTag).map((tag) => `#${escapeHtml(tag)}`).join(" ")}</td><td>${escapeHtml(video.vRank || "")}</td><td><small>${escapeHtml(video.region || "")}<br>${escapeHtml(video.vFile || "")}</small></td><td><button class="secondary" data-manage="play">播放</button> <button class="secondary" data-manage="edit">编辑</button> <button class="secondary" data-manage="delete">删除</button></td></tr>`,
           )
           .join("");
       }
@@ -1112,7 +1190,7 @@
         const video = managedVideos.find(
           (item) => String(item.id) === row.dataset.id,
         );
-        row.innerHTML = `<td colspan="7"><div class="grid"><div class="field"><label>名称</label><input data-edit="vName" value="${escapeHtml(video.vName)}"></div><div class="field"><label>编号</label><input data-edit="vNumber" value="${escapeHtml(video.vNumber)}"></div><div class="field"><label>类型</label><input data-edit="vType" value="${escapeHtml(video.vType)}"></div><div class="field"><label>评级</label><input data-edit="vRank" value="${escapeHtml(video.vRank)}"></div><div class="field"><label>标签</label><input data-edit="vTag" value="${escapeHtml(video.vTag || "")}"></div></div><div class="actions"><button class="primary" data-manage="save">保存</button><button class="secondary" data-manage="cancel">取消</button></div></td>`;
+        row.innerHTML = `<td colspan="7"><div class="grid"><div class="field"><label>名称</label><input data-edit="vName" value="${escapeHtml(video.vName)}"></div><div class="field"><label>编号</label><input data-edit="vNumber" value="${escapeHtml(video.vNumber)}"></div><div class="field"><label>类型</label><input data-edit="vType" value="${escapeHtml(video.vType)}"></div><div class="field"><label>动画细分</label><input data-edit="vSubtype" value="${escapeHtml(video.vSubtype || "")}"></div><div class="field"><label>评级</label><input data-edit="vRank" value="${escapeHtml(video.vRank)}"></div><div class="field"><label>国家 / 地区</label><input data-edit="region" value="${escapeHtml(video.region || "")}"></div><div class="field"><label>标签</label><input data-edit="vTag" value="${escapeHtml(video.vTag || "")}"></div></div><div class="actions"><button class="primary" data-manage="save">保存</button><button class="secondary" data-manage="cancel">取消</button></div></td>`;
       }
       $("manageRows").onclick = async (event) => {
         const button = event.target.closest("[data-manage]");
@@ -1167,6 +1245,8 @@
       $("archiveBtn").onclick = () => showPage("archive");
       $("manageSettingsBtn").onclick = () => $("settingsBtn").click();
       $("manageRefresh").onclick = loadManagedVideos;
+      $("manageType").onchange = loadManagedVideos;
+      $("manageRegion").onchange = loadManagedVideos;
       $("manageSearch").onkeydown = (event) => {
         if (event.key === "Enter") loadManagedVideos();
       };
@@ -1177,7 +1257,7 @@
         );
       $("submitBtn").onclick = () => submit("batch");
       $("classifyBtn").onclick = () => submit("classify");
-      ["rootDirectory", "vType", "vAuthor", "vSeries", "vSeason"].forEach(
+      ["rootDirectory", "vRank", "vType", "vSubtype", "vAuthor", "vSeries", "vSeason", "region"].forEach(
         (id) => $(id).addEventListener("input", updatePathPreview),
       );
       updatePathPreview();

@@ -22,13 +22,23 @@ class VideoFileStorageService {
     fun buildTypeDirectory(
         rootDirectory: String,
         vType: String,
+        vRank: String = "ALL",
+        vSubtype: String? = null,
         vAuthor: String? = null,
         vSeries: String? = null,
         vSeason: String? = null
     ): Path {
         val safeRoot = rootDirectory.trim().ifEmpty { throw IllegalArgumentException("v_file root directory cannot be empty") }
         val safeType = vType.trim().ifEmpty { throw IllegalArgumentException("v_type cannot be empty") }
-        var directory = Paths.get(safeRoot).toAbsolutePath().normalize().resolve(safeType).normalize()
+        val safeRank = normalizeRank(vRank)
+        var directory = Paths.get(safeRoot).toAbsolutePath().normalize()
+            .resolve(safeRank)
+            .resolve(sanitizeFileToken(safeType))
+            .normalize()
+
+        if (safeType.equals("Animation", ignoreCase = true) && !vSubtype.isNullOrBlank()) {
+            directory = directory.resolve(sanitizeFileToken(vSubtype)).normalize()
+        }
 
         if (!vAuthor.isNullOrBlank()) {
             directory = directory.resolve(sanitizeFileToken(vAuthor)).normalize()
@@ -48,6 +58,8 @@ class VideoFileStorageService {
         rootDirectory: String,
         currentDirectory: String? = null,
         vType: String,
+        vRank: String = "ALL",
+        vSubtype: String? = null,
         selectedFiles: List<String>,
         vName: String? = null,
         vAuthor: String? = null,
@@ -59,7 +71,7 @@ class VideoFileStorageService {
         val resolvedName = normalizeCustomName(vName)
         validateNameOverride(resolvedName, vSeries, vSeason, vNumber)
 
-        val targetDirectory = buildTypeDirectory(rootDirectory, vType, vAuthor, vSeries, vSeason)
+        val targetDirectory = buildTypeDirectory(rootDirectory, vType, vRank, vSubtype, vAuthor, vSeries, vSeason)
         Files.createDirectories(targetDirectory)
 
         val movedFiles = mutableListOf<String>()
@@ -105,6 +117,8 @@ class VideoFileStorageService {
         vType: String,
         file: MultipartFile,
         vName: String? = null,
+        vRank: String = "ALL",
+        vSubtype: String? = null,
         vAuthor: String? = null,
         vSeries: String? = null,
         vSeason: String? = null,
@@ -113,7 +127,7 @@ class VideoFileStorageService {
         if (file.isEmpty) throw IllegalArgumentException("上传文件不能为空")
         val resolvedName = normalizeCustomName(vName)
         validateNameOverride(resolvedName, vSeries, vSeason, vNumber)
-        val targetDirectory = buildTypeDirectory(rootDirectory, vType, vAuthor, vSeries, vSeason)
+        val targetDirectory = buildTypeDirectory(rootDirectory, vType, vRank, vSubtype, vAuthor, vSeries, vSeason)
         Files.createDirectories(targetDirectory)
         val targetName = buildTargetFileName(file.originalFilename ?: "video", resolvedName, vSeries, vSeason, vNumber)
         val targetPath = targetDirectory.resolve(targetName).normalize()
@@ -194,6 +208,11 @@ class VideoFileStorageService {
 
         return sanitizeFileToken(trimmed)
     }
+
+    private fun normalizeRank(value: String?): String =
+        if (value?.trim()?.equals("R", ignoreCase = true) == true ||
+            value?.trim()?.equals("R18", ignoreCase = true) == true ||
+            value?.trim()?.equals("18+", ignoreCase = true) == true) "R" else "ALL"
 
     private fun generateSnowflakeId(): String {
         val sequence = SEQUENCE.incrementAndGet() and SEQUENCE_MASK

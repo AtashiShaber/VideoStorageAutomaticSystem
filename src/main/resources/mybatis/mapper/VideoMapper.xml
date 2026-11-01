@@ -9,8 +9,10 @@
         <result property="vName" column="v_name"/>
         <result property="vType" column="v_type"/>
         <result property="vRank" column="v_rank"/>
+        <result property="vSubtype" column="v_subtype"/>
         <result property="vAuthor" column="v_author"/>
         <result property="vTag" column="v_tag"/>
+        <result property="region" column="region"/>
         <result property="vSeries" column="v_series"/>
         <result property="vSeason" column="v_season"/>
         <result property="vNumber" column="v_number"/>
@@ -18,18 +20,18 @@
     </resultMap>
 
     <insert id="insert" parameterType="com.atashi.vide.storage.entity.Video" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO video (v_name, v_type, v_rank, v_author, v_tag, v_series, v_season, v_number, v_file)
-        VALUES (#{vName}, #{vType}, #{vRank}, #{vAuthor}, #{vTag}, #{vSeries}, #{vSeason}, #{vNumber}, #{vFile})
+        INSERT INTO video (v_name, v_type, v_rank, v_subtype, v_author, v_tag, region, v_series, v_season, v_number, v_file)
+        VALUES (#{vName}, #{vType}, #{vRank}, #{vSubtype}, #{vAuthor}, #{vTag}, #{region}, #{vSeries}, #{vSeason}, #{vNumber}, #{vFile})
     </insert>
 
     <select id="selectById" parameterType="long" resultMap="VideoMap">
-        SELECT id, v_name, v_type, v_rank, v_author, v_tag, v_series, v_season, v_number, v_file
+        SELECT id, v_name, v_type, v_rank, v_subtype, v_author, v_tag, region, v_series, v_season, v_number, v_file
         FROM video
         WHERE id = #{id}
     </select>
 
     <select id="selectAll" resultMap="VideoMap">
-        SELECT id, v_name, v_type, v_rank, v_author, v_tag, v_series, v_season, v_number, v_file
+        SELECT id, v_name, v_type, v_rank, v_subtype, v_author, v_tag, region, v_series, v_season, v_number, v_file
         FROM video
         ORDER BY id DESC
     </select>
@@ -39,8 +41,10 @@
         SET v_name = #{vName},
             v_type = #{vType},
             v_rank = #{vRank},
+            v_subtype = #{vSubtype},
             v_author = #{vAuthor},
             v_tag = #{vTag},
+            region = #{region},
             v_series = #{vSeries},
             v_season = #{vSeason},
             v_number = #{vNumber},
@@ -54,16 +58,18 @@
     </delete>
 
     <select id="searchByCondition" resultMap="VideoMap">
-        SELECT id, v_name, v_type, v_rank, v_author, v_tag, v_series, v_season, v_number, v_file
+        SELECT id, v_name, v_type, v_rank, v_subtype, v_author, v_tag, region, v_series, v_season, v_number, v_file
         FROM video
         <where>
             <if test="keyword != null and keyword != ''">
                 AND (
                     LOWER(v_name) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
                     OR LOWER(v_type) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+                    OR LOWER(v_subtype) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
                     OR LOWER(v_author) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
                     OR LOWER(v_series) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
                     OR LOWER(v_tag) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+                    OR LOWER(region) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
                     OR LOWER(v_rank) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
                     OR LOWER(v_season) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
                 )
@@ -77,6 +83,9 @@
             <if test="rank != null and rank != ''">
                 AND LOWER(v_rank) LIKE LOWER(CONCAT('%', #{rank}, '%'))
             </if>
+            <if test="subtype != null and subtype != ''">
+                AND LOWER(v_subtype) LIKE LOWER(CONCAT('%', #{subtype}, '%'))
+            </if>
             <if test="author != null and author != ''">
                 AND LOWER(v_author) LIKE LOWER(CONCAT('%', #{author}, '%'))
             </if>
@@ -87,6 +96,9 @@
                     OR LOWER(v_tag) LIKE LOWER(CONCAT('% ', #{tag}, '%'))
                     OR LOWER(v_tag) LIKE LOWER(CONCAT('% ', #{tag}, ' %'))
                 )
+            </if>
+            <if test="region != null and region != ''">
+                AND LOWER(region) LIKE LOWER(CONCAT('%', #{region}, '%'))
             </if>
             <if test="series != null and series != ''">
                 AND LOWER(v_series) LIKE LOWER(CONCAT('%', #{series}, '%'))

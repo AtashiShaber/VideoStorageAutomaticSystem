@@ -15,7 +15,7 @@
 
 1. 前端或调用方选中某些视频文件
 2. 前端通过上传接口将源文件发送给后端
-3. 根据 vType、vAuthor、vSeries、vSeason 生成归档目录
+3. 根据 vRank、vType、vSubtype、vAuthor、vSeries、vSeason 生成归档目录
 4. 将上传文件保存到 rootDirectory 下的最终存储位置
 5. 将元数据写入 H2 数据库
 6. 通过统一关键字搜索检索 type、author、series、tag 等字段
@@ -211,16 +211,20 @@ http://localhost:8080/h2-console
 
 ```text
 rootDirectory/
-  vType/
-    vAuthor/
-      vSeries/
-        vSeason/
-          file.mp4
+  vRank/                 # ALL 或 R
+    vType/               # LiveAction 或 Animation
+      vSubtype/          # Animation 可选：3D 或 Animal
+        vAuthor/
+          vSeries/
+            vSeason/
+              file.mp4
 ```
 
 ### 具体规则
 - rootDirectory 是最终存储根目录
-- vType 是一级分类，如 Anime、Movie
+- vRank 是年龄分级目录，使用 ALL（全年龄）或 R（成人）
+- vType 是英文大类：LiveAction 或 Animation
+- vSubtype 是动画细分：3D 或 Animal；真人作品留空
 - vAuthor 是作者/公司/团队
 - 若存在 vSeries，则继续放入 series 目录
 - 若存在 vSeason，则继续放入 season 目录
@@ -228,13 +232,17 @@ rootDirectory/
 - 若缺少 vSeries 或 vSeason，则使用 snowflake 随机名称
 - 若用户传入 vName 且未设置 vSeries / vSeason / vNumber，则以用户指定的名称作为文件名
 - 若用户同时设置了 vName 与 vSeries / vSeason / vNumber，则系统拒绝该配置并抛出异常
-- tag 不参与目录层级，仅作为查询字段
+- region 保存作品出品国家/地区并支持筛选
+- tag 不参与目录层级，仅作为查询字段；查询结果会按空格或 `#` 拆分为可选标签
 
 ### 用户覆盖规则
 - vName：若不为空，且没有 vSeries / vSeason / vNumber，则使用该值作为文件名
-- vType：若不为空，则按用户值生成目录和分类
+- vType：使用 LiveAction 或 Animation 生成目录和分类
+- vRank：使用 ALL 或 R 生成年龄分级目录
+- vSubtype：Animation 下可使用 3D 或 Animal
 - vSeries / vSeason / vNumber：若不为空，则按设置值指定路径和命名
-- vTag：若不为空，则写入元数据，作为搜索字段
+- vTag：若不为空，则写入元数据，作为搜索字段和标签筛选项
+- region：作品出品国家/地区，作为搜索和筛选字段
 - 如果某字段为空，则回退到默认逻辑
 
 ## 目录结构示例
